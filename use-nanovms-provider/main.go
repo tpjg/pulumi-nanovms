@@ -12,7 +12,8 @@ func main() {
 
 	cfg := types.Config{
 		RunConfig: types.RunConfig{
-			Bridged: true,
+			Bridged: false,
+			Memory:  "1G",
 		},
 	}
 	config, err := json.Marshal(cfg)

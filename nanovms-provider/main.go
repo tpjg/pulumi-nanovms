@@ -20,6 +20,8 @@ import (
 	"github.com/nanovms/ops/lepton"
 	"github.com/nanovms/ops/provider"
 	"github.com/nanovms/ops/types"
+
+	"github.com/wI2L/jsondiff"
 )
 
 func main() {
@@ -85,62 +87,43 @@ func (i *ImageState) Annotate(a infer.Annotator) {
 
 func (Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (infer.CreateResponse[ImageState], error) {
 	var resp infer.CreateResponse[ImageState]
-	if !req.Inputs.Force {
-		if _, err := os.Stat(req.Inputs.Name); !os.IsNotExist(err) {
-			return resp, fmt.Errorf("file already exists; pass force=true to override")
-		}
-	}
-	if req.DryRun { // Don't do the actual creating if in preview
-		p.GetLogger(ctx).Info("Preview only returns the fake ID, does nothing")
-		return infer.CreateResponse[ImageState]{ID: req.Inputs.Name}, nil
-	}
 
 	if _, err := os.Stat(req.Inputs.Elf); os.IsNotExist(err) {
 		return resp, fmt.Errorf("elf file with path %s not found", req.Inputs.Elf)
 	}
 
-	config := &types.Config{}
-	config.RunConfig.Accel = true
-	config.RunConfig.Memory = "2G"
-
-	if req.Inputs.Config == "" {
-		p.GetLogger(ctx).Warning("no config provided, using defaults")
-	} else {
-		err := json.Unmarshal([]byte(req.Inputs.Config), config)
-		if err != nil {
-			return resp, fmt.Errorf("cannot unmarshal config: %w", err)
-		}
-	}
-	config.Program = req.Inputs.Elf
-	config.RunConfig.ImageName = path.Join(lepton.GetOpsHome(), "images", req.Inputs.Name+".img")
-	config.CloudConfig.ImageName = req.Inputs.Name
-
-	if config.Kernel == "" {
-		version, err := getCurrentVersion()
-		if err != nil {
-			return resp, fmt.Errorf("failed to get kernel version: %w", err)
-		}
-		version = setKernelVersion(version)
-
-		config.Kernel = getKernelVersion(version)
-	}
-
-	provider, err := provider.CloudProvider(req.Inputs.Provider, &config.CloudConfig)
+	builder, err := createBuilder(ctx, req.Inputs)
 	if err != nil {
-		return resp, fmt.Errorf("failed to create cloud provider: %w", err)
+		return resp, err
 	}
 
-	opsContext := lepton.NewContext(config)
-	imagePath, err := provider.BuildImage(opsContext)
+	if req.DryRun { // Don't do the actual creating if in preview
+		return infer.CreateResponse[ImageState]{
+			ID: req.Inputs.Name,
+			Output: ImageState{
+				ImagePath: req.Inputs.Name,
+				ImageID:   req.Inputs.Elf,
+				Config:    string(builder.configAsJson),
+			},
+		}, nil
+	}
+
+	if !req.Inputs.Force {
+		//TODO: seems there is no easy way to check if the image is already built for most providers, except 'onprem'
+		if req.Inputs.Provider == "onprem" {
+			if _, err := os.Stat(builder.config.RunConfig.ImageName); !os.IsNotExist(err) {
+				return resp, fmt.Errorf("file already exists; pass force=true to override")
+			}
+		}
+	}
+
+	p.GetLogger(ctx).Debugf("creating image with config: %s", builder.configAsJson)
+
+	opsContext := lepton.NewContext(builder.config)
+	imagePath, err := builder.provider.BuildImage(opsContext)
 	if err != nil {
 		return resp, fmt.Errorf("failed to build image: %w", err)
 	}
-
-	resultingConfig, err := json.Marshal(config)
-	if err != nil {
-		return resp, fmt.Errorf("failed to marshal resultingconfig: %w", err)
-	}
-	p.GetLogger(ctx).Debugf("creating image with config: %s", resultingConfig)
 
 	cs, err := checksum(imagePath)
 	if err != nil {
@@ -155,7 +138,7 @@ func (Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (in
 		Output: ImageState{
 			ImagePath: req.Inputs.Name,
 			ImageID:   req.Inputs.Elf,
-			Config:    string(resultingConfig),
+			Config:    string(builder.configAsJson),
 			Checksum:  cs,
 		},
 	}, nil
@@ -168,8 +151,6 @@ func (Image) Delete(ctx context.Context, req infer.DeleteRequest[ImageArgs]) err
 }
 
 func (Image) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResponse[ImageArgs], error) {
-	p.GetLogger(ctx).Infof("CHECKING only returns the fake ID, does nothing: %v", req)
-
 	if _, ok := req.NewInputs.GetOk("name"); !ok {
 		req.NewInputs = req.NewInputs.Set("name", property.New(req.Name))
 	}
@@ -210,6 +191,8 @@ func (Image) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResp
 				})
 			}
 		}
+	} else {
+		p.GetLogger(ctx).Info("empty config field, using defaults")
 	}
 
 	return infer.CheckResponse[ImageArgs]{
@@ -220,31 +203,39 @@ func (Image) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResp
 
 func (Image) Update(ctx context.Context, req infer.UpdateRequest[ImageArgs, ImageState]) (infer.UpdateResponse[ImageState], error) {
 	if req.DryRun { // Don't do the update if in preview
-		p.GetLogger(ctx).Infof("Previewing UPDATE only returns the fake ID, does nothing: %v", req)
+		p.GetLogger(ctx).Info("Previewing UPDATE, note UPDATE is not implemented for Image, only replacement")
 		return infer.UpdateResponse[ImageState]{}, nil
 	}
-
-	if req.Inputs.Elf != req.State.ImageID {
-		p.GetLogger(ctx).Infof("Updating, Elf not the same")
-
-		return infer.UpdateResponse[ImageState]{}, fmt.Errorf("Update not yet really implemented")
-	}
-
-	return infer.UpdateResponse[ImageState]{
-		Output: ImageState{
-			ImagePath: "updated path",
-			ImageID:   "updated " + req.Inputs.Elf,
-		},
-	}, nil
+	return infer.UpdateResponse[ImageState]{}, fmt.Errorf("Update not implemented, use replace")
 }
 
 func (Image) Diff(ctx context.Context, req infer.DiffRequest[ImageArgs, ImageState]) (infer.DiffResponse, error) {
+	builder, err := createBuilder(ctx, req.Inputs)
+	if err != nil {
+		return infer.DiffResponse{}, err
+	}
+
 	diff := map[string]p.PropertyDiff{}
 	if req.Inputs.Elf != req.State.ImageID {
 		diff["elf"] = p.PropertyDiff{Kind: p.UpdateReplace} // completely replace
 	}
 	if req.Inputs.Name != req.State.ImagePath {
-		diff["name"] = p.PropertyDiff{Kind: p.Update}
+		diff["name"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	patch, err := jsondiff.CompareJSON([]byte(req.State.Config), []byte(builder.configAsJson))
+	if err != nil {
+		return infer.DiffResponse{}, err
+	}
+	for _, change := range patch {
+		p.GetLogger(ctx).Infof("config change: %v", change)
+	}
+	if len(patch) == 0 {
+		p.GetLogger(ctx).Infof("configs are functionally identical: %s", builder.configAsJson)
+	} else {
+		diff["config"] = p.PropertyDiff{Kind: p.UpdateReplace}
+	}
+	if builder.configAsJson == req.State.Config {
+		p.GetLogger(ctx).Infof("configs are identical: %s", builder.configAsJson)
 	}
 	return infer.DiffResponse{
 		DeleteBeforeReplace: true,
@@ -264,6 +255,55 @@ func (Image) WireDependencies(f infer.FieldSelector, args *ImageArgs, state *Ima
 	f.OutputField(&state.ImagePath).DependsOn(f.InputField(&args.Name))
 	f.OutputField(&state.Checksum).DependsOn(f.InputField(&args.Elf))
 	f.OutputField(&state.Config).DependsOn(f.InputField(&args.Config))
+}
+
+type builder struct {
+	config       *types.Config
+	configAsJson string
+	provider     lepton.Provider
+}
+
+func createBuilder(ctx context.Context, args ImageArgs) (*builder, error) {
+	config := &types.Config{}
+	config.RunConfig.Accel = true
+	config.RunConfig.Memory = "2G"
+
+	if args.Config == "" {
+		p.GetLogger(ctx).Warning("no config provided, using defaults")
+	} else {
+		err := json.Unmarshal([]byte(args.Config), config)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal config: %w", err)
+		}
+	}
+	config.Program = args.Elf
+	config.RunConfig.ImageName = path.Join(lepton.GetOpsHome(), "images", args.Name+".img")
+	config.CloudConfig.ImageName = args.Name
+
+	if config.Kernel == "" {
+		version, err := getCurrentVersion()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get kernel version: %w", err)
+		}
+		version = setKernelVersion(version)
+
+		config.Kernel = getKernelVersion(version)
+	}
+
+	provider, err := provider.CloudProvider(args.Provider, &config.CloudConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create cloud provider: %w", err)
+	}
+
+	resultingConfig, err := json.Marshal(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal resultingconfig: %w", err)
+	}
+	return &builder{
+		config:       config,
+		configAsJson: string(resultingConfig),
+		provider:     provider,
+	}, nil
 }
 
 func getCurrentVersion() (string, error) {

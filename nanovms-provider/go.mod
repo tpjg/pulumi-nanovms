@@ -7,6 +7,7 @@ require (
 	github.com/pulumi/pulumi-go-provider v1.0.0
 	github.com/pulumi/pulumi/sdk/v3 v3.169.0
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
+	github.com/wI2L/jsondiff v0.7.0
 )
 
 require (
@@ -170,6 +171,10 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/terra-farm/go-virtualbox v0.0.4 // indirect
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
+	github.com/tidwall/gjson v1.18.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/vmware/govmomi v0.22.2 // indirect
