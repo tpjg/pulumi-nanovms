@@ -14,6 +14,7 @@ import (
 
 	p "github.com/pulumi/pulumi-go-provider"
 	"github.com/pulumi/pulumi-go-provider/infer"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 	"github.com/pulumi/pulumi/sdk/v3/go/property"
 	"github.com/ttacon/chalk"
 
@@ -25,15 +26,7 @@ import (
 )
 
 func main() {
-	provider, err := infer.NewProviderBuilder().
-		WithResources(
-			infer.Resource(Image{}),
-		).
-		WithNamespace("tpjg").
-		WithDisplayName("pulumi-nanovms").
-		WithDescription("A provider for NanoVMs with pulumi-go-provider.").
-		WithHomepage("https://www.pulumi.com").
-		Build()
+	provider, err := newProvider()
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s", err.Error())
@@ -48,17 +41,43 @@ func main() {
 	}
 }
 
+func newProvider() (p.Provider, error) {
+	return infer.NewProviderBuilder().
+		WithResources(
+			infer.Resource(&Image{}),
+		).
+		WithNamespace("tpjg").
+		WithDisplayName("pulumi-nanovms").
+		WithDescription("A provider for NanoVMs with pulumi-go-provider.").
+		WithHomepage("https://www.pulumi.com").
+		WithModuleMap(map[tokens.ModuleName]tokens.ModuleName{
+			"pulumi-nanovms": "index",
+		}).
+		Build()
+}
+
 type Image struct{}
 
+var _ = (infer.CustomCreate[ImageArgs, ImageState])((*Image)(nil))
+var _ = (infer.CustomDelete[ImageState])((*Image)(nil))
+var _ = (infer.CustomCheck[ImageArgs])((*Image)(nil))
+var _ = (infer.CustomUpdate[ImageArgs, ImageState])((*Image)(nil))
+var _ = (infer.CustomDiff[ImageArgs, ImageState])((*Image)(nil))
+var _ = (infer.CustomRead[ImageArgs, ImageState])((*Image)(nil))
+var _ = (infer.ExplicitDependencies[ImageArgs, ImageState])((*Image)(nil))
+var _ = (infer.Annotated)((*Image)(nil))
+var _ = (infer.Annotated)((*ImageArgs)(nil))
+var _ = (infer.Annotated)((*ImageState)(nil))
+
 func (i *Image) Annotate(a infer.Annotator) {
-	a.Describe(&i, "A NanoVMs image resource for building and deploying unikernel images")
+	a.Describe(&i, "A NanoVMs image resource for building unikernel images")
 }
 
 type ImageArgs struct {
 	Name     string `pulumi:"name"`
 	Elf      string `pulumi:"elf"`
 	Config   string `pulumi:"config,optional"`
-	Provider string `pulumi:"provider,optional"`
+	Provider string `pulumi:"provider"`
 	Force    bool   `pulumi:"force,optional"`
 }
 
@@ -75,6 +94,7 @@ type ImageState struct {
 	ImageID   string `pulumi:"imageId"`
 	Config    string `pulumi:"config"`
 	Checksum  string `pulumi:"checksum"`
+	Provider  string `pulumi:"provider"`
 }
 
 func (i *ImageState) Annotate(a infer.Annotator) {
@@ -83,9 +103,10 @@ func (i *ImageState) Annotate(a infer.Annotator) {
 	a.Describe(&i.ImageID, "The unique identifier of the built image")
 	a.Describe(&i.Config, "The configuration of the built image as a JSON encoded string")
 	a.Describe(&i.Checksum, "The checksum of the built image")
+	a.Describe(&i.Provider, "The cloud provider of the built image")
 }
 
-func (Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (infer.CreateResponse[ImageState], error) {
+func (*Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (infer.CreateResponse[ImageState], error) {
 	var resp infer.CreateResponse[ImageState]
 
 	if _, err := os.Stat(req.Inputs.Elf); os.IsNotExist(err) {
@@ -104,6 +125,7 @@ func (Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (in
 				ImagePath: req.Inputs.Name,
 				ImageID:   req.Inputs.Elf,
 				Config:    string(builder.configAsJson),
+				Provider:  req.Inputs.Provider,
 			},
 		}, nil
 	}
@@ -140,17 +162,39 @@ func (Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (in
 			ImageID:   req.Inputs.Elf,
 			Config:    string(builder.configAsJson),
 			Checksum:  cs,
+			Provider:  req.Inputs.Provider,
 		},
 	}, nil
 }
 
-func (Image) Delete(ctx context.Context, req infer.DeleteRequest[ImageArgs]) error {
-	p.GetLogger(ctx).Infof("DELETING only returns the fake ID, does nothing: %v", req.State)
+func (*Image) Delete(ctx context.Context, req infer.DeleteRequest[ImageState]) (infer.DeleteResponse, error) {
+	var resp infer.DeleteResponse
 
-	return nil
+	p.GetLogger(ctx).Infof("DELETING %v with provider %s", req.State.ImagePath, req.State.Provider)
+
+	var config types.Config
+
+	err := json.Unmarshal([]byte(req.State.Config), &config)
+	if err != nil {
+		return resp, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	provider, err := provider.CloudProvider(req.State.Provider, &config.CloudConfig)
+	if err != nil {
+		return resp, fmt.Errorf("failed to create provider: %w", err)
+	}
+
+	opsContext := lepton.NewContext(&config)
+	err = provider.DeleteImage(opsContext, req.State.ImagePath)
+	if err != nil {
+		p.GetLogger(ctx).Warningf("failed to delete image: %v", err)
+		return resp, err
+	}
+
+	return resp, nil
 }
 
-func (Image) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResponse[ImageArgs], error) {
+func (*Image) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResponse[ImageArgs], error) {
 	if _, ok := req.NewInputs.GetOk("name"); !ok {
 		req.NewInputs = req.NewInputs.Set("name", property.New(req.Name))
 	}
@@ -201,15 +245,19 @@ func (Image) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResp
 	}, err
 }
 
-func (Image) Update(ctx context.Context, req infer.UpdateRequest[ImageArgs, ImageState]) (infer.UpdateResponse[ImageState], error) {
-	if req.DryRun { // Don't do the update if in preview
-		p.GetLogger(ctx).Info("Previewing UPDATE, note UPDATE is not implemented for Image, only replacement")
-		return infer.UpdateResponse[ImageState]{}, nil
+func (i *Image) Update(ctx context.Context, req infer.UpdateRequest[ImageArgs, ImageState]) (infer.UpdateResponse[ImageState], error) {
+	if !req.DryRun {
+		p.GetLogger(ctx).Info("Updating resource - by creating it and overwriting the image")
 	}
-	return infer.UpdateResponse[ImageState]{}, fmt.Errorf("Update not implemented, use replace")
+
+	createRequest := infer.CreateRequest[ImageArgs]{Inputs: req.Inputs, DryRun: req.DryRun}
+	res, err := i.Create(ctx, createRequest)
+
+	resp := infer.UpdateResponse[ImageState]{Output: res.Output}
+	return resp, err
 }
 
-func (Image) Diff(ctx context.Context, req infer.DiffRequest[ImageArgs, ImageState]) (infer.DiffResponse, error) {
+func (*Image) Diff(ctx context.Context, req infer.DiffRequest[ImageArgs, ImageState]) (infer.DiffResponse, error) {
 	builder, err := createBuilder(ctx, req.Inputs)
 	if err != nil {
 		return infer.DiffResponse{}, err
@@ -217,10 +265,10 @@ func (Image) Diff(ctx context.Context, req infer.DiffRequest[ImageArgs, ImageSta
 
 	diff := map[string]p.PropertyDiff{}
 	if req.Inputs.Elf != req.State.ImageID {
-		diff["elf"] = p.PropertyDiff{Kind: p.UpdateReplace} // completely replace
+		diff["elf"] = p.PropertyDiff{Kind: p.Update}
 	}
 	if req.Inputs.Name != req.State.ImagePath {
-		diff["name"] = p.PropertyDiff{Kind: p.UpdateReplace}
+		diff["name"] = p.PropertyDiff{Kind: p.Update}
 	}
 	patch, err := jsondiff.CompareJSON([]byte(req.State.Config), []byte(builder.configAsJson))
 	if err != nil {
@@ -229,32 +277,34 @@ func (Image) Diff(ctx context.Context, req infer.DiffRequest[ImageArgs, ImageSta
 	for _, change := range patch {
 		p.GetLogger(ctx).Infof("config change: %v", change)
 	}
-	if len(patch) == 0 {
-		p.GetLogger(ctx).Infof("configs are functionally identical: %s", builder.configAsJson)
-	} else {
-		diff["config"] = p.PropertyDiff{Kind: p.UpdateReplace}
-	}
 	if builder.configAsJson == req.State.Config {
-		p.GetLogger(ctx).Infof("configs are identical: %s", builder.configAsJson)
+		p.GetLogger(ctx).Debugf("configs are identical: %s", builder.configAsJson)
+	} else if len(patch) == 0 {
+		p.GetLogger(ctx).Debugf("configs are functionally identical: %s", builder.configAsJson)
+	} else {
+		diff["config"] = p.PropertyDiff{Kind: p.Update}
 	}
 	return infer.DiffResponse{
-		DeleteBeforeReplace: true,
+		DeleteBeforeReplace: false,
 		HasChanges:          len(diff) > 0,
 		DetailedDiff:        diff,
 	}, nil
 }
 
-func (Image) Read(ctx context.Context, req infer.ReadRequest[ImageArgs, ImageState]) (infer.ReadResponse[ImageArgs, ImageState], error) {
+func (*Image) Read(ctx context.Context, req infer.ReadRequest[ImageArgs, ImageState]) (infer.ReadResponse[ImageArgs, ImageState], error) {
+	os.WriteFile("reading.txt", []byte(req.Inputs.Name), 0644)
+
 	p.GetLogger(ctx).Infof("READING only returns the input, it does nothing, not actually reading things anyway: %v", req)
 
 	return infer.ReadResponse[ImageArgs, ImageState](req), nil
 }
 
-func (Image) WireDependencies(f infer.FieldSelector, args *ImageArgs, state *ImageState) {
+func (*Image) WireDependencies(f infer.FieldSelector, args *ImageArgs, state *ImageState) {
 	f.OutputField(&state.ImageID).DependsOn(f.InputField(&args.Elf))
 	f.OutputField(&state.ImagePath).DependsOn(f.InputField(&args.Name))
 	f.OutputField(&state.Checksum).DependsOn(f.InputField(&args.Elf))
 	f.OutputField(&state.Config).DependsOn(f.InputField(&args.Config))
+	f.OutputField(&state.Provider).DependsOn(f.InputField(&args.Provider))
 }
 
 type builder struct {
@@ -277,7 +327,7 @@ func createBuilder(ctx context.Context, args ImageArgs) (*builder, error) {
 		}
 	}
 	config.Program = args.Elf
-	config.RunConfig.ImageName = path.Join(lepton.GetOpsHome(), "images", args.Name+".img")
+	config.RunConfig.ImageName = imageName(args.Name)
 	config.CloudConfig.ImageName = args.Name
 
 	if config.Kernel == "" {
@@ -372,4 +422,8 @@ func checksum(path string) (string, error) {
 	}
 
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
+
+func imageName(name string) string {
+	return path.Join(lepton.GetOpsHome(), "images", name)
 }

@@ -33,7 +33,7 @@
   },
   "resources": {
     "pulumi-nanovms:index:Image": {
-      "description": "A NanoVMs image resource for building and deploying unikernel images",
+      "description": "A NanoVMs image resource for building unikernel images",
       "properties": {
         "checksum": {
           "type": "string",
@@ -50,6 +50,10 @@
         "imagePath": {
           "type": "string",
           "description": "The path to the built image"
+        },
+        "provider": {
+          "type": "string",
+          "description": "The cloud provider of the built image"
         }
       },
       "type": "object",
@@ -57,7 +61,8 @@
         "checksum",
         "config",
         "imageId",
-        "imagePath"
+        "imagePath",
+        "provider"
       ],
       "inputProperties": {
         "config": {
@@ -83,7 +88,8 @@
       },
       "requiredInputs": [
         "elf",
-        "name"
+        "name",
+        "provider"
       ]
     }
   }

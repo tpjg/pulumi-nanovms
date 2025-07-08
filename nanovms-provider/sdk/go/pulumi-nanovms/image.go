@@ -12,7 +12,7 @@ import (
 	"github.com/tpjg/pulumi-nanovms/sdk/go/pulumi-nanovms/internal"
 )
 
-// A NanoVMs image resource for building and deploying unikernel images
+// A NanoVMs image resource for building unikernel images
 type Image struct {
 	pulumi.CustomResourceState
 
@@ -24,6 +24,8 @@ type Image struct {
 	ImageId pulumi.StringOutput `pulumi:"imageId"`
 	// The path to the built image
 	ImagePath pulumi.StringOutput `pulumi:"imagePath"`
+	// The cloud provider of the built image
+	Provider pulumi.StringOutput `pulumi:"provider"`
 }
 
 // NewImage registers a new resource with the given unique name, arguments, and options.
@@ -38,6 +40,9 @@ func NewImage(ctx *pulumi.Context,
 	}
 	if args.Name == nil {
 		return nil, errors.New("invalid value for required argument 'Name'")
+	}
+	if args.Provider == nil {
+		return nil, errors.New("invalid value for required argument 'Provider'")
 	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Image
@@ -81,7 +86,7 @@ type imageArgs struct {
 	// The name of the image
 	Name string `pulumi:"name"`
 	// The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, digitalocean)
-	Provider *string `pulumi:"provider"`
+	Provider string `pulumi:"provider"`
 }
 
 // The set of arguments for constructing a Image resource.
@@ -95,7 +100,7 @@ type ImageArgs struct {
 	// The name of the image
 	Name pulumi.StringInput
 	// The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, digitalocean)
-	Provider pulumi.StringPtrInput
+	Provider pulumi.StringInput
 }
 
 func (ImageArgs) ElementType() reflect.Type {
@@ -203,6 +208,11 @@ func (o ImageOutput) ImageId() pulumi.StringOutput {
 // The path to the built image
 func (o ImageOutput) ImagePath() pulumi.StringOutput {
 	return o.ApplyT(func(v *Image) pulumi.StringOutput { return v.ImagePath }).(pulumi.StringOutput)
+}
+
+// The cloud provider of the built image
+func (o ImageOutput) Provider() pulumi.StringOutput {
+	return o.ApplyT(func(v *Image) pulumi.StringOutput { return v.Provider }).(pulumi.StringOutput)
 }
 
 type ImageArrayOutput struct{ *pulumi.OutputState }

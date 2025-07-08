@@ -11,6 +11,7 @@ import (
 func main() {
 
 	cfg := types.Config{
+		Env: map[string]string{"BAR": "bazzzzz!!"},
 		RunConfig: types.RunConfig{
 			Bridged: false,
 			Memory:  "1G",
@@ -26,7 +27,8 @@ func main() {
 			Elf:      pulumi.String("example"),
 			Provider: pulumi.String("onprem"),
 			Config:   pulumi.String(config),
-		})
+			Force:    pulumi.Bool(true),
+		}, pulumi.RetainOnDelete(false))
 		if err != nil {
 			return err
 		}
