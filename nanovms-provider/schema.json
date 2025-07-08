@@ -1,0 +1,90 @@
+{
+  "name": "pulumi-nanovms",
+  "displayName": "pulumi-nanovms",
+  "version": "0.1.0",
+  "description": "A provider for NanoVMs with pulumi-go-provider.",
+  "homepage": "https://www.pulumi.com",
+  "namespace": "tpjg",
+  "meta": {
+    "moduleFormat": "(.*)"
+  },
+  "language": {
+    "csharp": {
+      "respectSchemaVersion": true
+    },
+    "go": {
+      "generateResourceContainerTypes": true,
+      "importBasePath": "github.com/tpjg/pulumi-nanovms/sdk/go/pulumi-nanovms",
+      "respectSchemaVersion": true
+    },
+    "nodejs": {
+      "respectSchemaVersion": true
+    },
+    "python": {
+      "pyproject": {
+        "enabled": true
+      },
+      "respectSchemaVersion": true
+    }
+  },
+  "config": {},
+  "provider": {
+    "type": "object"
+  },
+  "resources": {
+    "pulumi-nanovms:index:Image": {
+      "description": "A NanoVMs image resource for building and deploying unikernel images",
+      "properties": {
+        "checksum": {
+          "type": "string",
+          "description": "The checksum of the built image"
+        },
+        "config": {
+          "type": "string",
+          "description": "The configuration of the built image as a JSON encoded string"
+        },
+        "imageId": {
+          "type": "string",
+          "description": "The unique identifier of the built image"
+        },
+        "imagePath": {
+          "type": "string",
+          "description": "The path to the built image"
+        }
+      },
+      "type": "object",
+      "required": [
+        "checksum",
+        "config",
+        "imageId",
+        "imagePath"
+      ],
+      "inputProperties": {
+        "config": {
+          "type": "string",
+          "description": "The configuration as a JSON encoded string"
+        },
+        "elf": {
+          "type": "string",
+          "description": "The path to the executable file"
+        },
+        "force": {
+          "type": "boolean",
+          "description": "If an already existing image should be deleted if it exists"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the image"
+        },
+        "provider": {
+          "type": "string",
+          "description": "The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, digitalocean)"
+        }
+      },
+      "requiredInputs": [
+        "elf",
+        "name"
+      ]
+    }
+  }
+}
