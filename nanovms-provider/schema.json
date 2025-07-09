@@ -100,6 +100,51 @@
         "name",
         "provider"
       ]
+    },
+    "pulumi-nanovms:index:Instance": {
+      "description": "A NanoVMs resource for deploying unikernel images",
+      "properties": {
+        "config": {
+          "type": "string",
+          "description": "The configuration for the instance"
+        },
+        "image": {
+          "type": "string",
+          "description": "The name of the image deployed"
+        },
+        "instance": {
+          "type": "string",
+          "description": "The unique identifier for the instance"
+        },
+        "provider": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "config",
+        "image",
+        "instance",
+        "provider"
+      ],
+      "inputProperties": {
+        "config": {
+          "type": "string",
+          "description": "The configuration for the instance"
+        },
+        "image": {
+          "type": "string",
+          "description": "The name of the image to deploy"
+        },
+        "provider": {
+          "type": "string",
+          "description": "The provider for the instance"
+        }
+      },
+      "requiredInputs": [
+        "config",
+        "provider"
+      ]
     }
   }
 }

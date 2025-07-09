@@ -45,6 +45,7 @@ func newProvider() (p.Provider, error) {
 	return infer.NewProviderBuilder().
 		WithResources(
 			infer.Resource(&Image{}),
+			infer.Resource(&Instance{}),
 		).
 		WithNamespace("tpjg").
 		WithDisplayName("pulumi-nanovms").

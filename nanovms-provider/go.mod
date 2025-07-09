@@ -10,6 +10,8 @@ require (
 	github.com/wI2L/jsondiff v0.7.0
 )
 
+replace github.com/nanovms/ops => github.com/tpjg/ops v0.0.0-20250709220421-486d839d1cba
+
 require (
 	cloud.google.com/go v0.112.1 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
