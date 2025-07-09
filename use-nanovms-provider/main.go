@@ -23,11 +23,12 @@ func main() {
 	}
 	pulumi.Run(func(ctx *pulumi.Context) error {
 		img, err := ops.NewImage(ctx, "test", &ops.ImageArgs{
-			Name:     pulumi.String("test-image"),
-			Elf:      pulumi.String("example"),
-			Provider: pulumi.String("onprem"),
-			Config:   pulumi.String(config),
-			Force:    pulumi.Bool(true),
+			Name:            pulumi.String("test-image"),
+			Elf:             pulumi.String("example"),
+			Provider:        pulumi.String("onprem"),
+			Config:          pulumi.String(config),
+			Force:           pulumi.Bool(true),
+			UseLatestKernel: pulumi.Bool(true),
 		}, pulumi.RetainOnDelete(false))
 		if err != nil {
 			return err

@@ -74,11 +74,12 @@ func (i *Image) Annotate(a infer.Annotator) {
 }
 
 type ImageArgs struct {
-	Name     string `pulumi:"name"`
-	Elf      string `pulumi:"elf"`
-	Config   string `pulumi:"config,optional"`
-	Provider string `pulumi:"provider"`
-	Force    bool   `pulumi:"force,optional"`
+	Name            string `pulumi:"name"`
+	Elf             string `pulumi:"elf"`
+	Config          string `pulumi:"config,optional"`
+	Provider        string `pulumi:"provider"`
+	Force           bool   `pulumi:"force,optional"`
+	UseLatestKernel bool   `pulumi:"useLatestKernel,optional"`
 }
 
 func (i *ImageArgs) Annotate(a infer.Annotator) {
@@ -87,14 +88,16 @@ func (i *ImageArgs) Annotate(a infer.Annotator) {
 	a.Describe(&i.Config, "The configuration as a JSON encoded string")
 	a.Describe(&i.Provider, "The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, digitalocean)")
 	a.Describe(&i.Force, "If an already existing image should be deleted if it exists")
+	a.Describe(&i.UseLatestKernel, "If the latest kernel should be used, download it if necessary")
 }
 
 type ImageState struct {
-	ImagePath string `pulumi:"imagePath"`
-	ImageID   string `pulumi:"imageId"`
-	Config    string `pulumi:"config"`
-	Checksum  string `pulumi:"checksum"`
-	Provider  string `pulumi:"provider"`
+	ImagePath       string `pulumi:"imagePath"`
+	ImageID         string `pulumi:"imageId"`
+	Config          string `pulumi:"config"`
+	Checksum        string `pulumi:"checksum"`
+	Provider        string `pulumi:"provider"`
+	UseLatestKernel bool   `pulumi:"useLatestKernel"`
 }
 
 func (i *ImageState) Annotate(a infer.Annotator) {
@@ -104,6 +107,7 @@ func (i *ImageState) Annotate(a infer.Annotator) {
 	a.Describe(&i.Config, "The configuration of the built image as a JSON encoded string")
 	a.Describe(&i.Checksum, "The checksum of the built image")
 	a.Describe(&i.Provider, "The cloud provider of the built image")
+	a.Describe(&i.UseLatestKernel, "If the latest kernel should be used, download it if necessary")
 }
 
 func (*Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (infer.CreateResponse[ImageState], error) {
@@ -122,10 +126,11 @@ func (*Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (i
 		return infer.CreateResponse[ImageState]{
 			ID: req.Inputs.Name,
 			Output: ImageState{
-				ImagePath: req.Inputs.Name,
-				ImageID:   req.Inputs.Elf,
-				Config:    string(builder.configAsJson),
-				Provider:  req.Inputs.Provider,
+				ImagePath:       req.Inputs.Name,
+				ImageID:         req.Inputs.Elf,
+				Config:          string(builder.configAsJson),
+				Provider:        req.Inputs.Provider,
+				UseLatestKernel: req.Inputs.UseLatestKernel,
 			},
 		}, nil
 	}
@@ -158,11 +163,12 @@ func (*Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (i
 	return infer.CreateResponse[ImageState]{
 		ID: req.Inputs.Name,
 		Output: ImageState{
-			ImagePath: req.Inputs.Name,
-			ImageID:   req.Inputs.Elf,
-			Config:    string(builder.configAsJson),
-			Checksum:  cs,
-			Provider:  req.Inputs.Provider,
+			ImagePath:       req.Inputs.Name,
+			ImageID:         req.Inputs.Elf,
+			Config:          string(builder.configAsJson),
+			Checksum:        cs,
+			Provider:        req.Inputs.Provider,
+			UseLatestKernel: req.Inputs.UseLatestKernel,
 		},
 	}, nil
 }
@@ -305,6 +311,7 @@ func (*Image) WireDependencies(f infer.FieldSelector, args *ImageArgs, state *Im
 	f.OutputField(&state.Checksum).DependsOn(f.InputField(&args.Elf))
 	f.OutputField(&state.Config).DependsOn(f.InputField(&args.Config))
 	f.OutputField(&state.Provider).DependsOn(f.InputField(&args.Provider))
+	f.OutputField(&state.UseLatestKernel).DependsOn(f.InputField(&args.UseLatestKernel))
 }
 
 type builder struct {
@@ -331,7 +338,7 @@ func createBuilder(ctx context.Context, args ImageArgs) (*builder, error) {
 	config.CloudConfig.ImageName = args.Name
 
 	if config.Kernel == "" {
-		version, err := getCurrentVersion()
+		version, err := getCurrentVersion(args.UseLatestKernel)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get kernel version: %w", err)
 		}
@@ -356,12 +363,16 @@ func createBuilder(ctx context.Context, args ImageArgs) (*builder, error) {
 	}, nil
 }
 
-func getCurrentVersion() (string, error) {
+func getCurrentVersion(useLatestKernel bool) (string, error) {
 	var err error
 
 	local, remote := lepton.LocalReleaseVersion, lepton.LatestReleaseVersion
-	if local == "0.0" {
-		err = lepton.DownloadReleaseImages(remote, "")
+	if local == "0.0" || (useLatestKernel && remote != local) {
+		arch := ""
+		if runtime.GOARCH == "arm64" {
+			arch = "arm"
+		}
+		err = lepton.DownloadReleaseImages(remote, arch)
 		if err != nil {
 			return "", err
 		}

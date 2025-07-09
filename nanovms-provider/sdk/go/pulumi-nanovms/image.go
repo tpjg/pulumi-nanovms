@@ -26,6 +26,8 @@ type Image struct {
 	ImagePath pulumi.StringOutput `pulumi:"imagePath"`
 	// The cloud provider of the built image
 	Provider pulumi.StringOutput `pulumi:"provider"`
+	// If the latest kernel should be used, download it if necessary
+	UseLatestKernel pulumi.BoolOutput `pulumi:"useLatestKernel"`
 }
 
 // NewImage registers a new resource with the given unique name, arguments, and options.
@@ -87,6 +89,8 @@ type imageArgs struct {
 	Name string `pulumi:"name"`
 	// The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, digitalocean)
 	Provider string `pulumi:"provider"`
+	// If the latest kernel should be used, download it if necessary
+	UseLatestKernel *bool `pulumi:"useLatestKernel"`
 }
 
 // The set of arguments for constructing a Image resource.
@@ -101,6 +105,8 @@ type ImageArgs struct {
 	Name pulumi.StringInput
 	// The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, digitalocean)
 	Provider pulumi.StringInput
+	// If the latest kernel should be used, download it if necessary
+	UseLatestKernel pulumi.BoolPtrInput
 }
 
 func (ImageArgs) ElementType() reflect.Type {
@@ -213,6 +219,11 @@ func (o ImageOutput) ImagePath() pulumi.StringOutput {
 // The cloud provider of the built image
 func (o ImageOutput) Provider() pulumi.StringOutput {
 	return o.ApplyT(func(v *Image) pulumi.StringOutput { return v.Provider }).(pulumi.StringOutput)
+}
+
+// If the latest kernel should be used, download it if necessary
+func (o ImageOutput) UseLatestKernel() pulumi.BoolOutput {
+	return o.ApplyT(func(v *Image) pulumi.BoolOutput { return v.UseLatestKernel }).(pulumi.BoolOutput)
 }
 
 type ImageArrayOutput struct{ *pulumi.OutputState }

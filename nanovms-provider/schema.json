@@ -54,6 +54,10 @@
         "provider": {
           "type": "string",
           "description": "The cloud provider of the built image"
+        },
+        "useLatestKernel": {
+          "type": "boolean",
+          "description": "If the latest kernel should be used, download it if necessary"
         }
       },
       "type": "object",
@@ -62,7 +66,8 @@
         "config",
         "imageId",
         "imagePath",
-        "provider"
+        "provider",
+        "useLatestKernel"
       ],
       "inputProperties": {
         "config": {
@@ -84,6 +89,10 @@
         "provider": {
           "type": "string",
           "description": "The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, digitalocean)"
+        },
+        "useLatestKernel": {
+          "type": "boolean",
+          "description": "If the latest kernel should be used, download it if necessary"
         }
       },
       "requiredInputs": [
