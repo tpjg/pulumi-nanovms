@@ -132,7 +132,7 @@ class Instance(pulumi.CustomResource):
             if provider is None and not opts.urn:
                 raise TypeError("Missing required property 'provider'")
             __props__.__dict__["provider"] = provider
-            __props__.__dict__["instance"] = None
+            __props__.__dict__["instance_id"] = None
             __props__.__dict__["pid"] = None
             __props__.__dict__["private_ips"] = None
             __props__.__dict__["public_ips"] = None
@@ -161,7 +161,7 @@ class Instance(pulumi.CustomResource):
 
         __props__.__dict__["config"] = None
         __props__.__dict__["image"] = None
-        __props__.__dict__["instance"] = None
+        __props__.__dict__["instance_id"] = None
         __props__.__dict__["pid"] = None
         __props__.__dict__["private_ips"] = None
         __props__.__dict__["provider"] = None
@@ -186,12 +186,12 @@ class Instance(pulumi.CustomResource):
         return pulumi.get(self, "image")
 
     @_builtins.property
-    @pulumi.getter
-    def instance(self) -> pulumi.Output[_builtins.str]:
+    @pulumi.getter(name="instanceID")
+    def instance_id(self) -> pulumi.Output[_builtins.str]:
         """
         The unique identifier for the instance
         """
-        return pulumi.get(self, "instance")
+        return pulumi.get(self, "instance_id")
 
     @_builtins.property
     @pulumi.getter

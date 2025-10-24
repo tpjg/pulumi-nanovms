@@ -31,8 +31,8 @@ namespace Tpjg.PulumiNanovms
         /// <summary>
         /// The unique identifier for the instance
         /// </summary>
-        [Output("instance")]
-        public Output<string> Instance { get; private set; } = null!;
+        [Output("instanceID")]
+        public Output<string> InstanceID { get; private set; } = null!;
 
         /// <summary>
         /// The provider instance ID

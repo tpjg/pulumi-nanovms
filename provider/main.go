@@ -10,6 +10,10 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 )
 
+// Version can be set via ldflags during build:
+// go build -ldflags "-X main.Version=1.0.0"
+var Version = "0.1.0"
+
 func main() {
 	provider, err := newProvider()
 
@@ -18,7 +22,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = provider.Run(context.Background(), "pulumi-nanovms", "0.1.0")
+	err = provider.Run(context.Background(), "pulumi-nanovms", Version)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s", err.Error())

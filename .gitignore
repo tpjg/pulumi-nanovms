@@ -4,3 +4,25 @@
 # build outputs
 example
 provider/pulumi-nanovms
+
+# test artifacts
+*.tar.gz
+*.zip
+*.nupkg
+*.tgz
+dist/
+build/
+
+# act secrets (for local GitHub Actions testing)
+.secrets
+
+# SDK build artifacts
+sdk/*/node_modules/
+sdk/python/dist/
+sdk/python/build/
+sdk/python/*.egg-info/
+sdk/dotnet/bin/
+sdk/dotnet/obj/
+
+# act cache
+.act/

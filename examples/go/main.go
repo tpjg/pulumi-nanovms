@@ -51,7 +51,7 @@ func main() {
 			return err
 		}
 
-		ctx.Export("instanceId", instance.Instance)
+		ctx.Export("instanceId", instance.InstanceID)
 		ctx.Export("instanceImage", instance.Image)
 		ctx.Export("instanceProvider", instance.Provider)
 		ctx.Export("instanceIPs", instance.Public_ips)
