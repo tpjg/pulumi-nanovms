@@ -1,7 +1,7 @@
 {
   "name": "pulumi-nanovms",
   "displayName": "pulumi-nanovms",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "A provider for NanoVMs with pulumi-go-provider.",
   "homepage": "https://www.pulumi.com",
   "namespace": "tpjg",
