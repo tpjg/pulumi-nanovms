@@ -21,7 +21,7 @@ type Instance struct {
 	// The name of the image deployed
 	Image pulumi.StringOutput `pulumi:"image"`
 	// The unique identifier for the instance
-	Instance pulumi.StringOutput `pulumi:"instance"`
+	InstanceID pulumi.StringOutput `pulumi:"instanceID"`
 	// The provider instance ID
 	Pid pulumi.StringOutput `pulumi:"pid"`
 	// The private IP addresses of the instance
@@ -196,8 +196,8 @@ func (o InstanceOutput) Image() pulumi.StringOutput {
 }
 
 // The unique identifier for the instance
-func (o InstanceOutput) Instance() pulumi.StringOutput {
-	return o.ApplyT(func(v *Instance) pulumi.StringOutput { return v.Instance }).(pulumi.StringOutput)
+func (o InstanceOutput) InstanceID() pulumi.StringOutput {
+	return o.ApplyT(func(v *Instance) pulumi.StringOutput { return v.InstanceID }).(pulumi.StringOutput)
 }
 
 // The provider instance ID

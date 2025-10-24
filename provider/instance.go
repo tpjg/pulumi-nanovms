@@ -42,7 +42,7 @@ func (i *InstanceArgs) Annotate(a infer.Annotator) {
 }
 
 type InstanceState struct {
-	Instance   string   `pulumi:"instance"`
+	InstanceID string   `pulumi:"instanceID"`
 	ImageName  string   `pulumi:"image"`
 	Config     string   `pulumi:"config"`
 	Provider   string   `pulumi:"provider"`
@@ -53,7 +53,7 @@ type InstanceState struct {
 }
 
 func (i *InstanceState) Annotate(a infer.Annotator) {
-	a.Describe(&i.Instance, "The unique identifier for the instance")
+	a.Describe(&i.InstanceID, "The unique identifier for the instance")
 	a.Describe(&i.ImageName, "The name of the image deployed")
 	a.Describe(&i.Config, "The configuration for the instance")
 	a.Describe(&i.PID, "The provider instance ID")
@@ -120,10 +120,10 @@ func (*Instance) Create(ctx context.Context, req infer.CreateRequest[InstanceArg
 	}
 	resp.ID = config.RunConfig.InstanceName
 	resp.Output = InstanceState{
-		Instance:  resp.ID,
-		ImageName: config.CloudConfig.ImageName,
-		Config:    req.Inputs.Config,
-		Provider:  req.Inputs.Provider,
+		InstanceID: resp.ID,
+		ImageName:  config.CloudConfig.ImageName,
+		Config:     req.Inputs.Config,
+		Provider:   req.Inputs.Provider,
 	}
 	if !req.DryRun {
 		resp.Output.Status = "starting"
@@ -152,14 +152,14 @@ func (*Instance) Delete(ctx context.Context, req infer.DeleteRequest[InstanceSta
 		return resp, fmt.Errorf("failed to get provider: %w", err)
 	}
 
-	p.GetLogger(ctx).Infof("deleting instance %v on provider %v", req.State.Instance, req.State.Provider)
+	p.GetLogger(ctx).Infof("deleting instance %v on provider %v", req.State.InstanceID, req.State.Provider)
 
 	opsContext := lepton.NewContext(&config)
 
-	err = provider.DeleteInstance(opsContext, req.State.Instance)
+	err = provider.DeleteInstance(opsContext, req.State.InstanceID)
 	if err != nil {
 		if strings.Contains(err.Error(), "instance not found") {
-			p.GetLogger(ctx).Infof("instance %v not found - no longer running?", req.State.Instance)
+			p.GetLogger(ctx).Infof("instance %v not found - no longer running?", req.State.InstanceID)
 		} else {
 			return resp, fmt.Errorf("failed to delete instance: %w", err)
 		}
@@ -222,7 +222,7 @@ func (i *Instance) Diff(ctx context.Context, req infer.DiffRequest[InstanceArgs,
 }
 
 func (Instance) Read(ctx context.Context, req infer.ReadRequest[InstanceArgs, InstanceState]) (infer.ReadResponse[InstanceArgs, InstanceState], error) {
-	p.GetLogger(ctx).Debugf("reading instance %v information on provider %v", req.State.Instance, req.State.Provider)
+	p.GetLogger(ctx).Debugf("reading instance %v information on provider %v", req.State.InstanceID, req.State.Provider)
 
 	resp := infer.ReadResponse[InstanceArgs, InstanceState](req)
 
@@ -241,14 +241,14 @@ func (Instance) Read(ctx context.Context, req infer.ReadRequest[InstanceArgs, In
 		return resp, fmt.Errorf("failed to get provider: %w", err)
 	}
 
-	p.GetLogger(ctx).Infof("getting instance %v information on provider %v", req.State.Instance, req.State.Provider)
+	p.GetLogger(ctx).Infof("getting instance %v information on provider %v", req.State.InstanceID, req.State.Provider)
 
 	opsContext := lepton.NewContext(&config)
 
-	instance, err := provider.GetInstanceByName(opsContext, req.State.Instance)
+	instance, err := provider.GetInstanceByName(opsContext, req.State.InstanceID)
 	if err != nil {
 		if strings.Contains(err.Error(), "instance not found") {
-			p.GetLogger(ctx).Infof("instance %v not found - no longer running?", req.State.Instance)
+			p.GetLogger(ctx).Infof("instance %v not found - no longer running?", req.State.InstanceID)
 			resp.ID = ""
 			resp.State.ImageName = ""
 			return resp, nil

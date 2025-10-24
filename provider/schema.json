@@ -1,7 +1,7 @@
 {
   "name": "pulumi-nanovms",
   "displayName": "pulumi-nanovms",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A provider for NanoVMs with pulumi-go-provider.",
   "homepage": "https://www.pulumi.com",
   "namespace": "tpjg",
@@ -107,7 +107,7 @@
           "type": "string",
           "description": "The name of the image deployed"
         },
-        "instance": {
+        "instanceID": {
           "type": "string",
           "description": "The unique identifier for the instance"
         },
@@ -142,7 +142,7 @@
       "required": [
         "config",
         "image",
-        "instance",
+        "instanceID",
         "pid",
         "private_ips",
         "provider",

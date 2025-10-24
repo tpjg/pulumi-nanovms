@@ -45,7 +45,7 @@ export class Instance extends pulumi.CustomResource {
     /**
      * The unique identifier for the instance
      */
-    declare public /*out*/ readonly instance: pulumi.Output<string>;
+    declare public /*out*/ readonly instanceID: pulumi.Output<string>;
     /**
      * The provider instance ID
      */
@@ -87,7 +87,7 @@ export class Instance extends pulumi.CustomResource {
             resourceInputs["config"] = args?.config;
             resourceInputs["image"] = args?.image;
             resourceInputs["provider"] = args?.provider;
-            resourceInputs["instance"] = undefined /*out*/;
+            resourceInputs["instanceID"] = undefined /*out*/;
             resourceInputs["pid"] = undefined /*out*/;
             resourceInputs["private_ips"] = undefined /*out*/;
             resourceInputs["public_ips"] = undefined /*out*/;
@@ -95,7 +95,7 @@ export class Instance extends pulumi.CustomResource {
         } else {
             resourceInputs["config"] = undefined /*out*/;
             resourceInputs["image"] = undefined /*out*/;
-            resourceInputs["instance"] = undefined /*out*/;
+            resourceInputs["instanceID"] = undefined /*out*/;
             resourceInputs["pid"] = undefined /*out*/;
             resourceInputs["private_ips"] = undefined /*out*/;
             resourceInputs["provider"] = undefined /*out*/;

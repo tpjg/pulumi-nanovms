@@ -1,0 +1,229 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build-provider:
+    name: Build Provider Binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build provider binary
+        working-directory: provider
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          BINARY_NAME=pulumi-nanovms
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            BINARY_NAME="${BINARY_NAME}.exe"
+          fi
+
+          go build -o ${BINARY_NAME} \
+            -ldflags "-X main.Version=${{ steps.version.outputs.VERSION }}" \
+            .
+
+          # Create tarball/zip
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            zip pulumi-nanovms-v${{ steps.version.outputs.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.zip ${BINARY_NAME}
+          else
+            tar czf pulumi-nanovms-v${{ steps.version.outputs.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz ${BINARY_NAME}
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulumi-nanovms-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
+            provider/pulumi-nanovms-v*.tar.gz
+            provider/pulumi-nanovms-v*.zip
+          retention-days: 1
+
+  generate-sdks:
+    name: Generate and Publish SDKs
+    needs: build-provider
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+          cache-dependency-path: provider/go.sum
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v5
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Update version in files
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+
+          # Update schema.json
+          cd provider
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" schema.json
+
+          # Update main.go
+          sed -i "s/0.1.0/$VERSION/" main.go
+
+      - name: Build provider and generate schema
+        working-directory: provider
+        run: |
+          go build -o pulumi-nanovms
+          pulumi package get-schema ./pulumi-nanovms > schema.json
+
+      - name: Set up bun instead of Node.js
+        uses: oven-sh/setup-bun@v2
+        with:
+          registries: |
+            "https://registry.npmjs.org"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: Generate all SDKs
+        working-directory: provider
+        run: |
+          pulumi package gen-sdk . --local --out ../sdk
+
+          # Initialize Go SDK
+          cd ../sdk/go/pulumi-nanovms
+          go mod init github.com/tpjg/pulumi-nanovms/sdk/go/pulumi-nanovms
+          go mod tidy
+
+      - name: Update SDK versions
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+
+          # Update Node.js package.json
+          cd sdk/nodejs
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+
+          # Update Python pyproject.toml
+          cd ../python
+          sed -i "s/version = \".*\"/version = \"$VERSION\"/" pyproject.toml
+
+          # Update .NET csproj
+          cd ../dotnet
+          sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/" *.csproj
+
+      - name: Build and publish Node.js SDK
+        working-directory: sdk/nodejs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          bun install
+          bun run build
+          # Uncomment when ready to publish
+          # bun publish --access public
+
+      - name: Build and publish Python SDK
+        working-directory: sdk/python
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          pip install build twine
+          python -m build
+          # Uncomment when ready to publish
+          # twine upload dist/*
+
+      - name: Build and publish .NET SDK
+        working-directory: sdk/dotnet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet build -c Release
+          dotnet pack -c Release -o .
+          # Uncomment when ready to publish
+          # dotnet nuget push *.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+
+      - name: Upload SDK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdks
+          path: |
+            sdk/nodejs/*.tgz
+            sdk/python/dist/*
+            sdk/dotnet/*.nupkg
+          retention-days: 7
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-provider, generate-sdks]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          find artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" \) -exec cp {} release-assets/ \;
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ steps.version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: release-assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

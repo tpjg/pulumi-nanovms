@@ -51,15 +51,15 @@ public class Instance extends com.pulumi.resources.CustomResource {
      * The unique identifier for the instance
      * 
      */
-    @Export(name="instance", refs={String.class}, tree="[0]")
-    private Output<String> instance;
+    @Export(name="instanceID", refs={String.class}, tree="[0]")
+    private Output<String> instanceID;
 
     /**
      * @return The unique identifier for the instance
      * 
      */
-    public Output<String> instance() {
-        return this.instance;
+    public Output<String> instanceID() {
+        return this.instanceID;
     }
     /**
      * The provider instance ID
