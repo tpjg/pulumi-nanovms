@@ -34,7 +34,8 @@ jobs:
       - name: Install NanoVMs ops CLI
         run: |
           echo "Installing ops CLI..."
-          curl https://ops.city/get.sh -sSfL | sh
+          sudo apt-get update
+          curl https://ops.city/get.sh -sSfL | sudo sh
           echo "$HOME/.ops/bin" >> $GITHUB_PATH
 
           # Verify installation
