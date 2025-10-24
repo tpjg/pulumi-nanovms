@@ -1,0 +1,10 @@
+name: integration-test
+description: Integration test for NanoVMs provider
+runtime:
+  name: nodejs
+  options:
+    packagemanager: bun
+plugins:
+  providers:
+    - name: pulumi-nanovms
+      path: ../../provider

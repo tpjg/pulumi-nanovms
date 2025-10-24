@@ -38,7 +38,7 @@ This section is for those who want to contribute to or modify the provider itsel
 
 ```
 pulumi-nanovms/
-├── provider/              # Provider source code (Go)
+├── provider/             # Provider source code (Go)
 │   ├── main.go           # Entry point, provider setup
 │   ├── image.go          # Image resource implementation
 │   ├── instance.go       # Instance resource implementation
@@ -46,7 +46,7 @@ pulumi-nanovms/
 │   ├── schema.json       # Generated Pulumi schema
 │   ├── build-sdk.sh      # SDK generation script
 │   └── go.mod            # Go dependencies
-├── sdk/                   # Generated SDKs (auto-generated, do not edit)
+├── sdk/                  # Generated SDKs (auto-generated, do not edit)
 │   ├── nodejs/           # TypeScript/JavaScript SDK
 │   ├── python/           # Python SDK
 │   ├── dotnet/           # .NET SDK
@@ -55,14 +55,18 @@ pulumi-nanovms/
 │   ├── nodejs/           # TypeScript examples
 │   ├── go/               # Go examples
 │   └── application/      # Sample applications to deploy
+├── tests/
+│   └── integration/      # Integration test Pulumi program
 ├── docs/                 # Provider documentation
 │   ├── _index.md         # Main documentation page
 │   └── installation-configuration.md
 ├── .github/
 │   └── workflows/        # CI/CD pipelines
 │       ├── test.yml      # CI workflow (PRs and commits)
-│       └── release.yml   # Release workflow (tags)
-└── test-locally.sh       # Local testing script
+│       ├── release.yml   # Release workflow (tags)
+│       └── integration-test.yml  # Integration tests (manual trigger)
+├── test-locally.sh               # Local CI testing script
+└── test-integration-local.sh     # Local integration testing script
 ```
 
 ### Prerequisites for Development
@@ -174,6 +178,52 @@ This validates:
 - Schema generation works
 - All 4 SDKs generate and compile
 - Example projects build
+
+#### Integration Testing
+
+Integration tests verify the full end-to-end workflow by actually building and deploying a unikernel.
+
+**Run integration tests locally:**
+
+```bash
+./test-integration-local.sh
+```
+
+This comprehensive test:
+1. Builds a sample application (`examples/application/example`)
+2. Builds the provider and generates SDKs
+3. Runs the integration test Pulumi program (`tests/integration`)
+4. Creates a unikernel image and deploys it with QEMU
+5. Tests that the HTTP server responds correctly
+6. Cleans up all resources
+
+**The test program:** `tests/integration/` contains a Pulumi program similar to the examples but configured for local testing with the onprem provider.
+
+**Prerequisites for integration tests:**
+- ops CLI installed (`brew install nanovms/ops/ops`)
+- QEMU installed (included with ops)
+- Pulumi CLI
+- disk space for kernel and images
+
+**Why not in CI?**
+
+Integration tests require QEMU with KVM acceleration for reasonable performance. GitHub's free `ubuntu-latest` runners don't support hardware virtualization, which would make tests extremely slow.
+
+Integration tests run locally where KVM/HVF acceleration is available.
+
+**Running integration tests in CI:**
+
+A manual GitHub Actions workflow is available for integration testing:
+
+1. Go to the repository on GitHub
+2. Click **Actions** → **Integration Test**
+3. Click **Run workflow**
+4. Wait ... (slow due to software-emulated QEMU)
+
+This workflow runs the same test as `./test-integration-local.sh` but in GitHub's CI environment without hardware acceleration. Use it for:
+- Pre-release validation
+- Verifying changes to the provider core
+- Testing before major releases
 
 ### Making Changes
 

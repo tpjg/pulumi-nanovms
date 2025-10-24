@@ -32,4 +32,8 @@ if [ ! -f go.mod ]; then
 fi
 go mod tidy
 
+# Install nodejs dependencies
+cd ../../nodejs
+bun install
+
 echo "SDK generation complete!"

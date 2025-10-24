@@ -1,0 +1,138 @@
+name: Integration Test
+
+on:
+  workflow_dispatch:  # Manual trigger only
+    inputs:
+      verbose:
+        description: 'Enable verbose output'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  integration-test:
+    name: End-to-End Integration Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # Allow extra time for software-emulated QEMU
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache-dependency-path: provider/go.sum
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v5
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install NanoVMs ops CLI
+        run: |
+          echo "Installing ops CLI..."
+          curl https://ops.city/get.sh -sSfL | sh
+          echo "$HOME/.ops/bin" >> $GITHUB_PATH
+
+          # Verify installation
+          export PATH="$HOME/.ops/bin:$PATH"
+          ops version
+
+      - name: Verify QEMU installation
+        run: |
+          echo "Checking for QEMU (installed with ops)..."
+          export PATH="$HOME/.ops/bin:$PATH"
+          which qemu-system-x86_64 || echo "QEMU not found in PATH, but ops may have it"
+
+          # ops installs QEMU in its own directory
+          if [ -f "$HOME/.ops/bin/qemu-system-x86_64" ]; then
+            echo "QEMU found in ops directory"
+            $HOME/.ops/bin/qemu-system-x86_64 --version | head -1
+          fi
+
+      - name: Display system info
+        run: |
+          echo "=== System Information ==="
+          uname -a
+          echo ""
+          echo "=== CPU Info ==="
+          cat /proc/cpuinfo | grep "model name" | head -1
+          echo ""
+          echo "=== Memory ==="
+          free -h
+          echo ""
+          echo "=== Disk Space ==="
+          df -h /
+          echo ""
+          echo "=== KVM Support ==="
+          if [ -e /dev/kvm ]; then
+            echo "✓ /dev/kvm exists (KVM may be available)"
+            ls -la /dev/kvm
+          else
+            echo "✗ /dev/kvm not found (will use software emulation - this will be SLOW)"
+          fi
+
+      - name: Warning about performance
+        if: ${{ !contains(runner.name, 'larger') }}
+        run: |
+          echo "⚠️  WARNING: Running on standard GitHub runner without KVM acceleration"
+          echo "⚠️  This test will use software emulation and may take 10-15 minutes"
+          echo "⚠️  For faster tests, use larger runners or run locally with KVM/HVF"
+          echo ""
+
+      - name: Make integration test script executable
+        run: chmod +x ./test-integration-local.sh
+
+      - name: Run integration test
+        env:
+          VERBOSE: ${{ inputs.verbose }}
+        run: |
+          echo "Starting integration test..."
+          echo "This may take 10-15 minutes due to QEMU software emulation"
+          echo ""
+          echo "Test program: tests/integration/"
+          echo ""
+
+          # Run the integration test
+          ./test-integration-local.sh
+        timeout-minutes: 25
+
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-artifacts
+          path: |
+            /tmp/pulumi-up.log
+            /tmp/response.html
+            ~/.ops/logs/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Cleanup ops instances
+        if: always()
+        run: |
+          export PATH="$HOME/.ops/bin:$PATH"
+          echo "Checking for any remaining instances..."
+          ops instance list || true
+
+          # Try to clean up any instances that might be stuck
+          for instance in $(ops instance list 2>/dev/null | grep -v "NAME" | awk '{print $1}' || true); do
+            echo "Cleaning up instance: $instance"
+            ops instance delete "$instance" || true
+          done
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "=== Integration Test Summary ==="
+          if [ -f /tmp/response.html ]; then
+            echo "✓ HTTP response captured"
+            echo "Response preview:"
+            head -20 /tmp/response.html || true
+          fi
+          echo ""
+          echo "Test completed. Check logs above for details."

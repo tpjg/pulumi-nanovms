@@ -333,10 +333,13 @@ func createBuilder(ctx context.Context, args ImageArgs, building bool) (*builder
 	config.Program = args.Elf
 	config.Args = []string{filepath.Base(args.Elf)}
 	config.RunConfig.ImageName = args.Name
+	if args.Provider == "onprem" {
+		config.RunConfig.ImageName = path.Join(lepton.GetOpsHome(), "images", args.Name)
+	}
 	config.CloudConfig.ImageName = args.Name
 
 	arch := archCheck(config.Program)
-	if arch != runtime.GOARCH {
+	if arch != runtime.GOARCH && (arch+"64" != runtime.GOARCH) {
 		if building {
 			p.GetLogger(ctx).Warningf("Warning: Detected %s architecture in Elf binary, but running on %s, building image for %s", arch, runtime.GOARCH, arch)
 		}
