@@ -36,7 +36,8 @@ jobs:
           echo "Installing ops CLI..."
           # Already set environment so no new session is needed
           export OPS_DIR="$HOME/.ops"
-          export PATH="$HOME/.ops/bin:$PATH"          apt-get update
+          export PATH="$HOME/.ops/bin:$PATH"
+          apt-get update
           curl https://ops.city/get.sh -sSfL | sh
 
           # Verify installation
