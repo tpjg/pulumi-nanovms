@@ -125,7 +125,7 @@ func (*Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (i
 	return infer.CreateResponse[ImageState]{
 		ID: req.Inputs.Name,
 		Output: ImageState{
-			ImagePath:       imagePath,
+			ImagePath:       path.Base(imagePath),
 			ImageName:       req.Inputs.Name,
 			Config:          string(builder.configAsJson),
 			Provider:        req.Inputs.Provider,
