@@ -1,19 +1,19 @@
 name: Integration Test
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch: # Manual trigger only
     inputs:
       verbose:
-        description: 'Enable verbose output'
+        description: "Enable verbose output"
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 jobs:
   integration-test:
     name: End-to-End Integration Test
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # Allow extra time for software-emulated QEMU
+    timeout-minutes: 30 # Allow extra time for software-emulated QEMU
 
     steps:
       - name: Checkout code
@@ -22,7 +22,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: "1.25"
           cache-dependency-path: provider/go.sum
 
       - name: Install Pulumi CLI
