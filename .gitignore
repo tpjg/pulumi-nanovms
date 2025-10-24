@@ -1,0 +1,7 @@
+# env files
+*.env
+
+# build outputs
+examples/application/example/example
+provider/pulumi-nanovms
+examples/go/example
