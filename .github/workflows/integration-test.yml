@@ -38,7 +38,7 @@ jobs:
           export OPS_DIR="$HOME/.ops"
           export PATH="$HOME/.ops/bin:$PATH"
           sudo apt-get update
-          curl https://ops.city/get.sh -sSfL | sudo sh
+          curl https://ops.city/get.sh -sSfL | sh
 
           # Verify installation
           ops version
