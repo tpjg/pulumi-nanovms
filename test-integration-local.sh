@@ -204,6 +204,12 @@ info "Using example binary: $EXAMPLE_BINARY"
 
 # Initialize Pulumi stack (or use existing)
 info "Setting up Pulumi stack..."
+if [ -z "$PULUMI_CONFIG_PASSPHRASE" ]; then
+    info "Setting PULUMI_CONFIG_PASSPHRASE to default value"
+    export PULUMI_CONFIG_PASSPHRASE="testing"
+else
+    info "Using existing PULUMI_CONFIG_PASSPHRASE"
+fi
 pulumi login --local
 pulumi stack select dev 2>/dev/null || pulumi stack init dev
 
