@@ -37,7 +37,6 @@ jobs:
           # Doing some stuff that must be done as root so the ops CLI can be installed
           sudo apt update
           sudo apt install qemu-system-x86 -y --no-upgrade
-          sudo addgroup kvm
           sudo usermod -aG kvm $USER
 
           echo "Installing ops CLI..."
