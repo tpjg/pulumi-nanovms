@@ -204,6 +204,7 @@ info "Using example binary: $EXAMPLE_BINARY"
 
 # Initialize Pulumi stack (or use existing)
 info "Setting up Pulumi stack..."
+pulumi login --local
 pulumi stack select dev 2>/dev/null || pulumi stack init dev
 
 success "Pulumi stack ready"
