@@ -2,6 +2,5 @@
 *.env
 
 # build outputs
-examples/application/example/example
+example
 provider/pulumi-nanovms
-examples/go/example

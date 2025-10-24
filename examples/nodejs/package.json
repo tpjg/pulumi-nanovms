@@ -1,0 +1,17 @@
+{
+    "name": "use-nanovms-provider",
+    "version": "0.1.0",
+    "description": "A minimal TypeScript Pulumi program",
+    "main": "index.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "@types/node": "^18",
+        "typescript": "^4.3.5"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^3.142.0",
+        "@tpjg/pulumi-nanovms": "file:../../sdk/nodejs"
+    }
+}
