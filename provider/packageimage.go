@@ -7,9 +7,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
-	"strings"
 
+	"github.com/nanovms/ops/cmd"
 	"github.com/nanovms/ops/lepton"
 	"github.com/nanovms/ops/provider"
 	"github.com/nanovms/ops/types"
@@ -19,76 +18,75 @@ import (
 	"github.com/wI2L/jsondiff"
 )
 
-type Image struct{}
+type PackageImage struct{}
 
-var _ = (infer.CustomCreate[ImageArgs, ImageState])((*Image)(nil))
-var _ = (infer.CustomDelete[ImageState])((*Image)(nil))
-var _ = (infer.CustomCheck[ImageArgs])((*Image)(nil))
-var _ = (infer.CustomUpdate[ImageArgs, ImageState])((*Image)(nil))
-var _ = (infer.CustomDiff[ImageArgs, ImageState])((*Image)(nil))
-var _ = (infer.CustomRead[ImageArgs, ImageState])((*Image)(nil))
-var _ = (infer.ExplicitDependencies[ImageArgs, ImageState])((*Image)(nil))
-var _ = (infer.Annotated)((*Image)(nil))
-var _ = (infer.Annotated)((*ImageArgs)(nil))
-var _ = (infer.Annotated)((*ImageState)(nil))
+var _ = (infer.CustomCreate[PackageImageArgs, PackageImageState])((*PackageImage)(nil))
+var _ = (infer.CustomDelete[PackageImageState])((*PackageImage)(nil))
+var _ = (infer.CustomCheck[PackageImageArgs])((*PackageImage)(nil))
+var _ = (infer.CustomUpdate[PackageImageArgs, PackageImageState])((*PackageImage)(nil))
+var _ = (infer.CustomDiff[PackageImageArgs, PackageImageState])((*PackageImage)(nil))
+var _ = (infer.CustomRead[PackageImageArgs, PackageImageState])((*PackageImage)(nil))
+var _ = (infer.ExplicitDependencies[PackageImageArgs, PackageImageState])((*PackageImage)(nil))
+var _ = (infer.Annotated)((*PackageImage)(nil))
+var _ = (infer.Annotated)((*PackageImageArgs)(nil))
+var _ = (infer.Annotated)((*PackageImageState)(nil))
 
-func (i *Image) Annotate(a infer.Annotator) {
-	a.Describe(&i, "A NanoVMs image resource for building unikernel images")
+func (i *PackageImage) Annotate(a infer.Annotator) {
+	a.Describe(&i, "A NanoVMs package image resource for building unikernel images from packages")
 }
 
-type ImageArgs struct {
+type PackageImageArgs struct {
 	Name            string `pulumi:"name"`
-	Elf             string `pulumi:"elf"`
+	PackageName     string `pulumi:"packageName"`
 	Config          string `pulumi:"config,optional"`
 	Provider        string `pulumi:"provider"`
 	Force           bool   `pulumi:"force,optional"`
 	UseLatestKernel bool   `pulumi:"useLatestKernel,optional"`
 }
 
-func (i *ImageArgs) Annotate(a infer.Annotator) {
+func (i *PackageImageArgs) Annotate(a infer.Annotator) {
 	a.Describe(&i.Name, "The name of the image")
-	a.Describe(&i.Elf, "The path to the executable file")
+	a.Describe(&i.PackageName, "The name of the package to use (e.g., 'node_v18.7.0')")
 	a.Describe(&i.Config, "The configuration as a JSON encoded string")
 	a.Describe(&i.Provider, "The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)")
 	a.Describe(&i.Force, "If an already existing image should be deleted if it exists")
 	a.Describe(&i.UseLatestKernel, "If the latest kernel should be used, download it if necessary")
 }
 
-type ImageState struct {
+type PackageImageState struct {
 	ImagePath       string `pulumi:"imagePath"`
 	ImageName       string `pulumi:"imageName"`
+	PackageName     string `pulumi:"packageName"`
 	Config          string `pulumi:"config"`
 	Provider        string `pulumi:"provider"`
 	UseLatestKernel bool   `pulumi:"useLatestKernel"`
 }
 
-func (i *ImageState) Annotate(a infer.Annotator) {
+func (i *PackageImageState) Annotate(a infer.Annotator) {
 	fmt.Fprintf(os.Stderr, "inferrer: %v ; i: %v\n", a, i)
 	a.Describe(&i.ImagePath, "The path to the built image")
 	a.Describe(&i.ImageName, "The name of the built image")
+	a.Describe(&i.PackageName, "The name of the package used")
 	a.Describe(&i.Config, "The configuration of the built image as a JSON encoded string")
 	a.Describe(&i.Provider, "The cloud provider of the built image")
 	a.Describe(&i.UseLatestKernel, "If the latest kernel should be used, download it if necessary")
 }
 
-func (*Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (infer.CreateResponse[ImageState], error) {
-	var resp infer.CreateResponse[ImageState]
+func (*PackageImage) Create(ctx context.Context, req infer.CreateRequest[PackageImageArgs]) (infer.CreateResponse[PackageImageState], error) {
+	var resp infer.CreateResponse[PackageImageState]
 
-	if _, err := os.Stat(req.Inputs.Elf); os.IsNotExist(err) {
-		return resp, fmt.Errorf("elf file with path %s not found", req.Inputs.Elf)
-	}
-
-	builder, err := createBuilder(ctx, req.Inputs, true)
+	builder, err := createPackageBuilder(ctx, req.Inputs, true)
 	if err != nil {
 		return resp, err
 	}
 
 	if req.DryRun { // Don't do the actual creating if in preview
-		return infer.CreateResponse[ImageState]{
+		return infer.CreateResponse[PackageImageState]{
 			ID: req.Inputs.Name,
-			Output: ImageState{
+			Output: PackageImageState{
 				ImagePath:       req.Inputs.Name,
-				ImageName:       req.Inputs.Elf,
+				ImageName:       req.Inputs.Name,
+				PackageName:     req.Inputs.PackageName,
 				Config:          string(builder.configAsJson),
 				Provider:        req.Inputs.Provider,
 				UseLatestKernel: req.Inputs.UseLatestKernel,
@@ -105,15 +103,14 @@ func (*Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (i
 		}
 	}
 
-	p.GetLogger(ctx).Debugf("Building image with config: %s", builder.configAsJson)
-	p.GetLogger(ctx).Infof("Building image: %s", builder.config.RunConfig.ImageName)
+	p.GetLogger(ctx).Debugf("Building image from package with config: %s", builder.configAsJson)
 
 	opsContext := lepton.NewContext(builder.config)
-	imagePath, err := builder.provider.BuildImage(opsContext)
+	imagePath, err := builder.provider.BuildImageWithPackage(opsContext, builder.packagePath)
 	if err != nil {
-		return resp, fmt.Errorf("failed to build image: %w", err)
+		return resp, fmt.Errorf("failed to build image from package: %w", err)
 	}
-	p.GetLogger(ctx).Infof("Image build, local path: %v", imagePath)
+	p.GetLogger(ctx).Infof("Image built from package, local path: %v", imagePath)
 
 	opsContext.Config().CloudConfig.ImageName = filepath.Base(imagePath)
 
@@ -123,11 +120,12 @@ func (*Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (i
 		return resp, fmt.Errorf("failed to create image: %w", err)
 	}
 
-	return infer.CreateResponse[ImageState]{
+	return infer.CreateResponse[PackageImageState]{
 		ID: req.Inputs.Name,
-		Output: ImageState{
+		Output: PackageImageState{
 			ImagePath:       path.Base(imagePath),
 			ImageName:       req.Inputs.Name,
+			PackageName:     req.Inputs.PackageName,
 			Config:          string(builder.configAsJson),
 			Provider:        req.Inputs.Provider,
 			UseLatestKernel: req.Inputs.UseLatestKernel,
@@ -135,7 +133,7 @@ func (*Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (i
 	}, nil
 }
 
-func (*Image) Delete(ctx context.Context, req infer.DeleteRequest[ImageState]) (infer.DeleteResponse, error) {
+func (*PackageImage) Delete(ctx context.Context, req infer.DeleteRequest[PackageImageState]) (infer.DeleteResponse, error) {
 	var resp infer.DeleteResponse
 
 	p.GetLogger(ctx).Infof("DELETING %v with provider %s", req.State.ImagePath, req.State.Provider)
@@ -162,11 +160,11 @@ func (*Image) Delete(ctx context.Context, req infer.DeleteRequest[ImageState]) (
 	return resp, nil
 }
 
-func (*Image) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResponse[ImageArgs], error) {
+func (*PackageImage) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckResponse[PackageImageArgs], error) {
 	if _, ok := req.NewInputs.GetOk("name"); !ok {
 		req.NewInputs = req.NewInputs.Set("name", property.New(req.Name))
 	}
-	args, fails, err := infer.DefaultCheck[ImageArgs](ctx, req.NewInputs)
+	args, fails, err := infer.DefaultCheck[PackageImageArgs](ctx, req.NewInputs)
 
 	provider, ok := req.NewInputs.GetOk("provider")
 	if !ok {
@@ -186,6 +184,19 @@ func (*Image) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckRes
 				Reason:   fmt.Sprintf("provider %s not supported", provider.AsString()),
 			})
 		}
+	}
+
+	packageName, ok := req.NewInputs.GetOk("packageName")
+	if !ok {
+		fails = append(fails, p.CheckFailure{
+			Property: "packageName",
+			Reason:   "packageName not specified",
+		})
+	} else if !packageName.IsString() || packageName.AsString() == "" {
+		fails = append(fails, p.CheckFailure{
+			Property: "packageName",
+			Reason:   "packageName must be a non-empty string",
+		})
 	}
 
 	config, ok := req.NewInputs.GetOk("config")
@@ -209,26 +220,26 @@ func (*Image) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckRes
 		p.GetLogger(ctx).Info("empty config field, using defaults")
 	}
 
-	return infer.CheckResponse[ImageArgs]{
+	return infer.CheckResponse[PackageImageArgs]{
 		Inputs:   args,
 		Failures: fails,
 	}, err
 }
 
-func (i *Image) Update(ctx context.Context, req infer.UpdateRequest[ImageArgs, ImageState]) (infer.UpdateResponse[ImageState], error) {
+func (i *PackageImage) Update(ctx context.Context, req infer.UpdateRequest[PackageImageArgs, PackageImageState]) (infer.UpdateResponse[PackageImageState], error) {
 	if !req.DryRun {
 		p.GetLogger(ctx).Info("Updating resource - by creating it and overwriting the image")
 	}
 
-	createRequest := infer.CreateRequest[ImageArgs]{Inputs: req.Inputs, DryRun: req.DryRun}
+	createRequest := infer.CreateRequest[PackageImageArgs]{Inputs: req.Inputs, DryRun: req.DryRun}
 	res, err := i.Create(ctx, createRequest)
 
-	resp := infer.UpdateResponse[ImageState]{Output: res.Output}
+	resp := infer.UpdateResponse[PackageImageState]{Output: res.Output}
 	return resp, err
 }
 
-func (*Image) Diff(ctx context.Context, req infer.DiffRequest[ImageArgs, ImageState]) (infer.DiffResponse, error) {
-	builder, err := createBuilder(ctx, req.Inputs, false)
+func (*PackageImage) Diff(ctx context.Context, req infer.DiffRequest[PackageImageArgs, PackageImageState]) (infer.DiffResponse, error) {
+	builder, err := createPackageBuilder(ctx, req.Inputs, false)
 	if err != nil {
 		return infer.DiffResponse{}, err
 	}
@@ -236,6 +247,9 @@ func (*Image) Diff(ctx context.Context, req infer.DiffRequest[ImageArgs, ImageSt
 	diff := map[string]p.PropertyDiff{}
 	if req.Inputs.Name != req.State.ImageName {
 		diff["name"] = p.PropertyDiff{Kind: p.Update}
+	}
+	if req.Inputs.PackageName != req.State.PackageName {
+		diff["packageName"] = p.PropertyDiff{Kind: p.Update}
 	}
 	patch, err := jsondiff.CompareJSON([]byte(req.State.Config), []byte(builder.configAsJson))
 	if err != nil {
@@ -258,8 +272,8 @@ func (*Image) Diff(ctx context.Context, req infer.DiffRequest[ImageArgs, ImageSt
 	}, nil
 }
 
-func (Image) Read(ctx context.Context, req infer.ReadRequest[ImageArgs, ImageState]) (infer.ReadResponse[ImageArgs, ImageState], error) {
-	resp := infer.ReadResponse[ImageArgs, ImageState](req)
+func (PackageImage) Read(ctx context.Context, req infer.ReadRequest[PackageImageArgs, PackageImageState]) (infer.ReadResponse[PackageImageArgs, PackageImageState], error) {
+	resp := infer.ReadResponse[PackageImageArgs, PackageImageState](req)
 
 	var config types.Config
 
@@ -301,21 +315,23 @@ func (Image) Read(ctx context.Context, req infer.ReadRequest[ImageArgs, ImageSta
 	return resp, nil
 }
 
-func (*Image) WireDependencies(f infer.FieldSelector, args *ImageArgs, state *ImageState) {
-	f.OutputField(&state.ImageName).DependsOn(f.InputField(&args.Elf))
+func (*PackageImage) WireDependencies(f infer.FieldSelector, args *PackageImageArgs, state *PackageImageState) {
+	f.OutputField(&state.ImageName).DependsOn(f.InputField(&args.PackageName))
 	f.OutputField(&state.ImagePath).DependsOn(f.InputField(&args.Name))
+	f.OutputField(&state.PackageName).DependsOn(f.InputField(&args.PackageName))
 	f.OutputField(&state.Config).DependsOn(f.InputField(&args.Config))
 	f.OutputField(&state.Provider).DependsOn(f.InputField(&args.Provider))
 	f.OutputField(&state.UseLatestKernel).DependsOn(f.InputField(&args.UseLatestKernel))
 }
 
-type builder struct {
+type packageBuilder struct {
 	config       *types.Config
 	configAsJson string
 	provider     lepton.Provider
+	packagePath  string
 }
 
-func createBuilder(ctx context.Context, args ImageArgs, building bool) (*builder, error) {
+func createPackageBuilder(ctx context.Context, args PackageImageArgs, building bool) (*packageBuilder, error) {
 	config := lepton.NewConfig()
 
 	if args.Config == "" {
@@ -327,35 +343,43 @@ func createBuilder(ctx context.Context, args ImageArgs, building bool) (*builder
 		}
 	}
 
-	// Note that the 'ops' tool sets various default values for the config when it
-	// does `NewMergeConfigContainer` with the command line arguments.
-	// Below sets the defaults similar to the 'ops' tool.
-
-	config.Program = args.Elf
-	config.Args = []string{filepath.Base(args.Elf)}
-	config.RunConfig.ImageName = path.Join(lepton.GetOpsHome(), "images", args.Name)
-	config.CloudConfig.ImageName = args.Name
-
-	arch := archCheck(config.Program)
-	if arch != runtime.GOARCH && (arch+"64" != runtime.GOARCH) {
-		if building {
-			p.GetLogger(ctx).Warningf("Warning: Detected %s architecture in Elf binary, but running on %s, building image for %s", arch, runtime.GOARCH, arch)
-		}
-		lepton.AltGOARCH = arch
+	// Set up package flags and use MergeToConfig to handle package setup
+	pkgFlags := &cmd.PkgCommandFlags{
+		Package:      args.PackageName,
+		LocalPackage: false, // Assume remote packages by default
 	}
 
-	version, err := getCurrentVersion(ctx, args.UseLatestKernel, arch)
+	// MergeToConfig will:
+	// 1. Resolve the package path (local or downloaded)
+	// 2. Download the package if it doesn't exist
+	// 3. Read the package manifest and merge config (Program, Args, Files, Dirs, Env, etc.)
+	if building {
+		p.GetLogger(ctx).Infof("Setting up package: %s", args.PackageName)
+	}
+	err := pkgFlags.MergeToConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to merge package config: %w", err)
+	}
+
+	// Get the package path for BuildImageWithPackage
+	packagePath := pkgFlags.PackagePath()
+	if building {
+		p.GetLogger(ctx).Infof("Package path: %s", packagePath)
+	}
+
+	// Override image names if specified by user
+	if args.Name != "" {
+		config.RunConfig.ImageName = path.Join(lepton.GetOpsHome(), "images", args.Name)
+		config.CloudConfig.ImageName = args.Name
+	}
+
+	version, err := getCurrentVersion(ctx, args.UseLatestKernel, pkgFlags.Parch())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get kernel version: %w", err)
 	}
 
 	if config.Kernel == "" {
 		config.NanosVersion = version
-
-		if strings.Contains(arch, "arm") {
-			version += "-arm"
-		}
-
 		config.Kernel = getKernelVersion(version)
 		if building {
 			p.GetLogger(ctx).Infof("Using kernel version %s", config.Kernel)
@@ -384,9 +408,10 @@ func createBuilder(ctx context.Context, args ImageArgs, building bool) (*builder
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal resultingconfig: %w", err)
 	}
-	return &builder{
+	return &packageBuilder{
 		config:       config,
 		configAsJson: string(resultingConfig),
 		provider:     provider,
+		packagePath:  packagePath,
 	}, nil
 }
