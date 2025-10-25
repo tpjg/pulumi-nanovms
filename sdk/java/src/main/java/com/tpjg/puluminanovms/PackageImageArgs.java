@@ -93,14 +93,14 @@ public final class PackageImageArgs extends com.pulumi.resources.ResourceArgs {
     }
 
     /**
-     * The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+     * The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
      * 
      */
     @Import(name="provider", required=true)
     private Output<String> provider;
 
     /**
-     * @return The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+     * @return The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
      * 
      */
     public Output<String> provider() {
@@ -258,7 +258,7 @@ public final class PackageImageArgs extends com.pulumi.resources.ResourceArgs {
         }
 
         /**
-         * @param provider The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+         * @param provider The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
          * 
          * @return builder
          * 
@@ -269,7 +269,7 @@ public final class PackageImageArgs extends com.pulumi.resources.ResourceArgs {
         }
 
         /**
-         * @param provider The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+         * @param provider The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
          * 
          * @return builder
          * 

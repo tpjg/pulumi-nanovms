@@ -30,7 +30,7 @@ class PackageImageArgs:
         The set of arguments for constructing a PackageImage resource.
         :param pulumi.Input[_builtins.str] name: The name of the image
         :param pulumi.Input[_builtins.str] package_name: The name of the package to use (e.g., 'node_v18.7.0')
-        :param pulumi.Input[_builtins.str] provider: The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+        :param pulumi.Input[_builtins.str] provider: The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
         :param pulumi.Input[_builtins.str] architecture: The target architecture (amd64 or arm64). If not specified, uses the current system architecture
         :param pulumi.Input[_builtins.str] config: The configuration as a JSON encoded string
         :param pulumi.Input[_builtins.bool] force: If an already existing image should be deleted if it exists
@@ -76,7 +76,7 @@ class PackageImageArgs:
     @pulumi.getter
     def provider(self) -> pulumi.Input[_builtins.str]:
         """
-        The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+        The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
         """
         return pulumi.get(self, "provider")
 
@@ -157,7 +157,7 @@ class PackageImage(pulumi.CustomResource):
         :param pulumi.Input[_builtins.bool] force: If an already existing image should be deleted if it exists
         :param pulumi.Input[_builtins.str] name: The name of the image
         :param pulumi.Input[_builtins.str] package_name: The name of the package to use (e.g., 'node_v18.7.0')
-        :param pulumi.Input[_builtins.str] provider: The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+        :param pulumi.Input[_builtins.str] provider: The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
         :param pulumi.Input[_builtins.bool] use_latest_kernel: If the latest kernel should be used, download it if necessary
         """
         ...

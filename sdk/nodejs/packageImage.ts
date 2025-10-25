@@ -131,7 +131,7 @@ export interface PackageImageArgs {
      */
     packageName: pulumi.Input<string>;
     /**
-     * The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+     * The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
      */
     provider: pulumi.Input<string>;
     /**

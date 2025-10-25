@@ -91,7 +91,7 @@ type packageImageArgs struct {
 	Name string `pulumi:"name"`
 	// The name of the package to use (e.g., 'node_v18.7.0')
 	PackageName string `pulumi:"packageName"`
-	// The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+	// The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
 	Provider string `pulumi:"provider"`
 	// If the latest kernel should be used, download it if necessary
 	UseLatestKernel *bool `pulumi:"useLatestKernel"`
@@ -109,7 +109,7 @@ type PackageImageArgs struct {
 	Name pulumi.StringInput
 	// The name of the package to use (e.g., 'node_v18.7.0')
 	PackageName pulumi.StringInput
-	// The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+	// The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
 	Provider pulumi.StringInput
 	// If the latest kernel should be used, download it if necessary
 	UseLatestKernel pulumi.BoolPtrInput

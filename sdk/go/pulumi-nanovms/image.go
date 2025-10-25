@@ -85,7 +85,7 @@ type imageArgs struct {
 	Force *bool `pulumi:"force"`
 	// The name of the image
 	Name string `pulumi:"name"`
-	// The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+	// The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
 	Provider string `pulumi:"provider"`
 	// If the latest kernel should be used, download it if necessary
 	UseLatestKernel *bool `pulumi:"useLatestKernel"`
@@ -101,7 +101,7 @@ type ImageArgs struct {
 	Force pulumi.BoolPtrInput
 	// The name of the image
 	Name pulumi.StringInput
-	// The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+	// The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
 	Provider pulumi.StringInput
 	// If the latest kernel should be used, download it if necessary
 	UseLatestKernel pulumi.BoolPtrInput
