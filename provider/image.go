@@ -106,6 +106,7 @@ func (*Image) Create(ctx context.Context, req infer.CreateRequest[ImageArgs]) (i
 	}
 
 	p.GetLogger(ctx).Debugf("Building image with config: %s", builder.configAsJson)
+	p.GetLogger(ctx).Infof("Building image: %s", builder.config.RunConfig.ImageName)
 
 	opsContext := lepton.NewContext(builder.config)
 	imagePath, err := builder.provider.BuildImage(opsContext)
@@ -332,10 +333,7 @@ func createBuilder(ctx context.Context, args ImageArgs, building bool) (*builder
 
 	config.Program = args.Elf
 	config.Args = []string{filepath.Base(args.Elf)}
-	config.RunConfig.ImageName = args.Name
-	if args.Provider == "onprem" {
-		config.RunConfig.ImageName = path.Join(lepton.GetOpsHome(), "images", args.Name)
-	}
+	config.RunConfig.ImageName = path.Join(lepton.GetOpsHome(), "images", args.Name)
 	config.CloudConfig.ImageName = args.Name
 
 	arch := archCheck(config.Program)

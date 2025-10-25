@@ -25,6 +25,8 @@ func (m *module) Construct(ctx *pulumi.Context, name, typ, urn string) (r pulumi
 		r = &Image{}
 	case "pulumi-nanovms:index:Instance":
 		r = &Instance{}
+	case "pulumi-nanovms:index:PackageImage":
+		r = &PackageImage{}
 	default:
 		return nil, fmt.Errorf("unknown resource type: %s", typ)
 	}

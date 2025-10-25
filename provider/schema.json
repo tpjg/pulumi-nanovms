@@ -167,6 +167,84 @@
         "config",
         "provider"
       ]
+    },
+    "pulumi-nanovms:index:PackageImage": {
+      "description": "A NanoVMs package image resource for building unikernel images from packages",
+      "properties": {
+        "architecture": {
+          "type": "string",
+          "description": "The target architecture of the built image"
+        },
+        "config": {
+          "type": "string",
+          "description": "The configuration of the built image as a JSON encoded string"
+        },
+        "imageName": {
+          "type": "string",
+          "description": "The name of the built image"
+        },
+        "imagePath": {
+          "type": "string",
+          "description": "The path to the built image"
+        },
+        "packageName": {
+          "type": "string",
+          "description": "The name of the package used"
+        },
+        "provider": {
+          "type": "string",
+          "description": "The cloud provider of the built image"
+        },
+        "useLatestKernel": {
+          "type": "boolean",
+          "description": "If the latest kernel should be used, download it if necessary"
+        }
+      },
+      "type": "object",
+      "required": [
+        "architecture",
+        "config",
+        "imageName",
+        "imagePath",
+        "packageName",
+        "provider",
+        "useLatestKernel"
+      ],
+      "inputProperties": {
+        "architecture": {
+          "type": "string",
+          "description": "The target architecture (amd64 or arm64). If not specified, uses the current system architecture"
+        },
+        "config": {
+          "type": "string",
+          "description": "The configuration as a JSON encoded string"
+        },
+        "force": {
+          "type": "boolean",
+          "description": "If an already existing image should be deleted if it exists"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the image"
+        },
+        "packageName": {
+          "type": "string",
+          "description": "The name of the package to use (e.g., 'node_v18.7.0')"
+        },
+        "provider": {
+          "type": "string",
+          "description": "The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)"
+        },
+        "useLatestKernel": {
+          "type": "boolean",
+          "description": "If the latest kernel should be used, download it if necessary"
+        }
+      },
+      "requiredInputs": [
+        "name",
+        "packageName",
+        "provider"
+      ]
     }
   }
 }

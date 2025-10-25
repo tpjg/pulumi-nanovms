@@ -34,6 +34,7 @@ func newProvider() (p.Provider, error) {
 	return infer.NewProviderBuilder().
 		WithResources(
 			infer.Resource(&Image{}),
+			infer.Resource(&PackageImage{}),
 			infer.Resource(&Instance{}),
 		).
 		WithNamespace("tpjg").

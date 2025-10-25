@@ -1,0 +1,11 @@
+name: use-nanovms-provider
+description: A minimal Go Pulumi program
+runtime: go
+plugins:
+  providers:
+    - name: pulumi-nanovms
+      path: ../../provider
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: go

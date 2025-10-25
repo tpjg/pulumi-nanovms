@@ -15,6 +15,11 @@ export type Instance = import("./instance").Instance;
 export const Instance: typeof import("./instance").Instance = null as any;
 utilities.lazyLoad(exports, ["Instance"], () => require("./instance"));
 
+export { PackageImageArgs } from "./packageImage";
+export type PackageImage = import("./packageImage").PackageImage;
+export const PackageImage: typeof import("./packageImage").PackageImage = null as any;
+utilities.lazyLoad(exports, ["PackageImage"], () => require("./packageImage"));
+
 export { ProviderArgs } from "./provider";
 export type Provider = import("./provider").Provider;
 export const Provider: typeof import("./provider").Provider = null as any;
@@ -29,6 +34,8 @@ const _module = {
                 return new Image(name, <any>undefined, { urn })
             case "pulumi-nanovms:index:Instance":
                 return new Instance(name, <any>undefined, { urn })
+            case "pulumi-nanovms:index:PackageImage":
+                return new PackageImage(name, <any>undefined, { urn })
             default:
                 throw new Error(`unknown resource type ${type}`);
         }

@@ -8,6 +8,7 @@ import typing
 # Export this package's modules as members:
 from .image import *
 from .instance import *
+from .package_image import *
 from .provider import *
 _utilities.register(
     resource_modules="""
@@ -18,7 +19,8 @@ _utilities.register(
   "fqn": "tpjg_pulumi_nanovms",
   "classes": {
    "pulumi-nanovms:index:Image": "Image",
-   "pulumi-nanovms:index:Instance": "Instance"
+   "pulumi-nanovms:index:Instance": "Instance",
+   "pulumi-nanovms:index:PackageImage": "PackageImage"
   }
  }
 ]
