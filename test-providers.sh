@@ -67,10 +67,20 @@ INSTANCE_FOUND=false
 while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
     echo "Attempt $((ATTEMPT + 1))/${MAX_ATTEMPTS}: Checking for running instance..."
 
-    if ops instance list -t ${PROVIDER} 2>/dev/null | grep -q "test-image"; then
-        echo "✓ Instance found and running!"
-        INSTANCE_FOUND=true
-        break
+    if [ -z "${TEST_ZONE}" ]; then
+        echo "running ops instance list -t ${PROVIDER}"
+        if ops instance list -t ${PROVIDER} 2>/dev/null | grep -q "test-image"; then
+            echo "✓ Instance found and running!"
+            INSTANCE_FOUND=true
+            break
+        fi
+    else
+        echo "running ops instance list -t ${PROVIDER} -z ${TEST_ZONE}"
+        if ops instance list -t ${PROVIDER} -z ${TEST_ZONE} 2>/dev/null | grep -q "test-image"; then
+            echo "✓ Instance found and running!"
+            INSTANCE_FOUND=true
+            break
+        fi
     fi
 
     ATTEMPT=$((ATTEMPT + 1))
