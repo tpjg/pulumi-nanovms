@@ -16,6 +16,8 @@ import (
 type PackageImage struct {
 	pulumi.CustomResourceState
 
+	// The target architecture of the built image
+	Architecture pulumi.StringOutput `pulumi:"architecture"`
 	// The configuration of the built image as a JSON encoded string
 	Config pulumi.StringOutput `pulumi:"config"`
 	// The name of the built image
@@ -79,6 +81,8 @@ func (PackageImageState) ElementType() reflect.Type {
 }
 
 type packageImageArgs struct {
+	// The target architecture (amd64 or arm64). If not specified, uses the current system architecture
+	Architecture *string `pulumi:"architecture"`
 	// The configuration as a JSON encoded string
 	Config *string `pulumi:"config"`
 	// If an already existing image should be deleted if it exists
@@ -95,6 +99,8 @@ type packageImageArgs struct {
 
 // The set of arguments for constructing a PackageImage resource.
 type PackageImageArgs struct {
+	// The target architecture (amd64 or arm64). If not specified, uses the current system architecture
+	Architecture pulumi.StringPtrInput
 	// The configuration as a JSON encoded string
 	Config pulumi.StringPtrInput
 	// If an already existing image should be deleted if it exists
@@ -194,6 +200,11 @@ func (o PackageImageOutput) ToPackageImageOutput() PackageImageOutput {
 
 func (o PackageImageOutput) ToPackageImageOutputWithContext(ctx context.Context) PackageImageOutput {
 	return o
+}
+
+// The target architecture of the built image
+func (o PackageImageOutput) Architecture() pulumi.StringOutput {
+	return o.ApplyT(func(v *PackageImage) pulumi.StringOutput { return v.Architecture }).(pulumi.StringOutput)
 }
 
 // The configuration of the built image as a JSON encoded string

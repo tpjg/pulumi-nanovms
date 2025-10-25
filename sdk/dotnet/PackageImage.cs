@@ -17,6 +17,12 @@ namespace Tpjg.PulumiNanovms
     public partial class PackageImage : global::Pulumi.CustomResource
     {
         /// <summary>
+        /// The target architecture of the built image
+        /// </summary>
+        [Output("architecture")]
+        public Output<string> Architecture { get; private set; } = null!;
+
+        /// <summary>
         /// The configuration of the built image as a JSON encoded string
         /// </summary>
         [Output("config")]
@@ -97,6 +103,12 @@ namespace Tpjg.PulumiNanovms
 
     public sealed class PackageImageArgs : global::Pulumi.ResourceArgs
     {
+        /// <summary>
+        /// The target architecture (amd64 or arm64). If not specified, uses the current system architecture
+        /// </summary>
+        [Input("architecture")]
+        public Input<string>? Architecture { get; set; }
+
         /// <summary>
         /// The configuration as a JSON encoded string
         /// </summary>

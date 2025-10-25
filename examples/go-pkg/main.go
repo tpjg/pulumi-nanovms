@@ -35,6 +35,7 @@ func main() {
 			Config:          pulumi.String(config),
 			Force:           pulumi.Bool(true),
 			UseLatestKernel: pulumi.Bool(false),
+			Architecture:    pulumi.String("amd64"),
 		}, pulumi.RetainOnDelete(false))
 		if err != nil {
 			return err

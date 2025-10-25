@@ -18,6 +18,21 @@ public final class PackageImageArgs extends com.pulumi.resources.ResourceArgs {
     public static final PackageImageArgs Empty = new PackageImageArgs();
 
     /**
+     * The target architecture (amd64 or arm64). If not specified, uses the current system architecture
+     * 
+     */
+    @Import(name="architecture")
+    private @Nullable Output<String> architecture;
+
+    /**
+     * @return The target architecture (amd64 or arm64). If not specified, uses the current system architecture
+     * 
+     */
+    public Optional<Output<String>> architecture() {
+        return Optional.ofNullable(this.architecture);
+    }
+
+    /**
      * The configuration as a JSON encoded string
      * 
      */
@@ -110,6 +125,7 @@ public final class PackageImageArgs extends com.pulumi.resources.ResourceArgs {
     private PackageImageArgs() {}
 
     private PackageImageArgs(PackageImageArgs $) {
+        this.architecture = $.architecture;
         this.config = $.config;
         this.force = $.force;
         this.name = $.name;
@@ -134,6 +150,27 @@ public final class PackageImageArgs extends com.pulumi.resources.ResourceArgs {
 
         public Builder(PackageImageArgs defaults) {
             $ = new PackageImageArgs(Objects.requireNonNull(defaults));
+        }
+
+        /**
+         * @param architecture The target architecture (amd64 or arm64). If not specified, uses the current system architecture
+         * 
+         * @return builder
+         * 
+         */
+        public Builder architecture(@Nullable Output<String> architecture) {
+            $.architecture = architecture;
+            return this;
+        }
+
+        /**
+         * @param architecture The target architecture (amd64 or arm64). If not specified, uses the current system architecture
+         * 
+         * @return builder
+         * 
+         */
+        public Builder architecture(String architecture) {
+            return architecture(Output.of(architecture));
         }
 
         /**

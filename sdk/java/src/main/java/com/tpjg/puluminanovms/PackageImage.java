@@ -20,6 +20,20 @@ import javax.annotation.Nullable;
 @ResourceType(type="pulumi-nanovms:index:PackageImage")
 public class PackageImage extends com.pulumi.resources.CustomResource {
     /**
+     * The target architecture of the built image
+     * 
+     */
+    @Export(name="architecture", refs={String.class}, tree="[0]")
+    private Output<String> architecture;
+
+    /**
+     * @return The target architecture of the built image
+     * 
+     */
+    public Output<String> architecture() {
+        return this.architecture;
+    }
+    /**
      * The configuration of the built image as a JSON encoded string
      * 
      */

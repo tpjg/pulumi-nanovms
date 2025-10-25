@@ -35,6 +35,10 @@ export class PackageImage extends pulumi.CustomResource {
     }
 
     /**
+     * The target architecture of the built image
+     */
+    declare public readonly architecture: pulumi.Output<string>;
+    /**
      * The configuration of the built image as a JSON encoded string
      */
     declare public readonly config: pulumi.Output<string>;
@@ -79,6 +83,7 @@ export class PackageImage extends pulumi.CustomResource {
             if (args?.provider === undefined && !opts.urn) {
                 throw new Error("Missing required property 'provider'");
             }
+            resourceInputs["architecture"] = args?.architecture;
             resourceInputs["config"] = args?.config;
             resourceInputs["force"] = args?.force;
             resourceInputs["name"] = args?.name;
@@ -88,6 +93,7 @@ export class PackageImage extends pulumi.CustomResource {
             resourceInputs["imageName"] = undefined /*out*/;
             resourceInputs["imagePath"] = undefined /*out*/;
         } else {
+            resourceInputs["architecture"] = undefined /*out*/;
             resourceInputs["config"] = undefined /*out*/;
             resourceInputs["imageName"] = undefined /*out*/;
             resourceInputs["imagePath"] = undefined /*out*/;
@@ -104,6 +110,10 @@ export class PackageImage extends pulumi.CustomResource {
  * The set of arguments for constructing a PackageImage resource.
  */
 export interface PackageImageArgs {
+    /**
+     * The target architecture (amd64 or arm64). If not specified, uses the current system architecture
+     */
+    architecture?: pulumi.Input<string>;
     /**
      * The configuration as a JSON encoded string
      */

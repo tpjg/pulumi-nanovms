@@ -22,6 +22,7 @@ class PackageImageArgs:
                  name: pulumi.Input[_builtins.str],
                  package_name: pulumi.Input[_builtins.str],
                  provider: pulumi.Input[_builtins.str],
+                 architecture: Optional[pulumi.Input[_builtins.str]] = None,
                  config: Optional[pulumi.Input[_builtins.str]] = None,
                  force: Optional[pulumi.Input[_builtins.bool]] = None,
                  use_latest_kernel: Optional[pulumi.Input[_builtins.bool]] = None):
@@ -30,6 +31,7 @@ class PackageImageArgs:
         :param pulumi.Input[_builtins.str] name: The name of the image
         :param pulumi.Input[_builtins.str] package_name: The name of the package to use (e.g., 'node_v18.7.0')
         :param pulumi.Input[_builtins.str] provider: The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+        :param pulumi.Input[_builtins.str] architecture: The target architecture (amd64 or arm64). If not specified, uses the current system architecture
         :param pulumi.Input[_builtins.str] config: The configuration as a JSON encoded string
         :param pulumi.Input[_builtins.bool] force: If an already existing image should be deleted if it exists
         :param pulumi.Input[_builtins.bool] use_latest_kernel: If the latest kernel should be used, download it if necessary
@@ -37,6 +39,8 @@ class PackageImageArgs:
         pulumi.set(__self__, "name", name)
         pulumi.set(__self__, "package_name", package_name)
         pulumi.set(__self__, "provider", provider)
+        if architecture is not None:
+            pulumi.set(__self__, "architecture", architecture)
         if config is not None:
             pulumi.set(__self__, "config", config)
         if force is not None:
@@ -82,6 +86,18 @@ class PackageImageArgs:
 
     @_builtins.property
     @pulumi.getter
+    def architecture(self) -> Optional[pulumi.Input[_builtins.str]]:
+        """
+        The target architecture (amd64 or arm64). If not specified, uses the current system architecture
+        """
+        return pulumi.get(self, "architecture")
+
+    @architecture.setter
+    def architecture(self, value: Optional[pulumi.Input[_builtins.str]]):
+        pulumi.set(self, "architecture", value)
+
+    @_builtins.property
+    @pulumi.getter
     def config(self) -> Optional[pulumi.Input[_builtins.str]]:
         """
         The configuration as a JSON encoded string
@@ -123,6 +139,7 @@ class PackageImage(pulumi.CustomResource):
     def __init__(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
+                 architecture: Optional[pulumi.Input[_builtins.str]] = None,
                  config: Optional[pulumi.Input[_builtins.str]] = None,
                  force: Optional[pulumi.Input[_builtins.bool]] = None,
                  name: Optional[pulumi.Input[_builtins.str]] = None,
@@ -135,6 +152,7 @@ class PackageImage(pulumi.CustomResource):
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
+        :param pulumi.Input[_builtins.str] architecture: The target architecture (amd64 or arm64). If not specified, uses the current system architecture
         :param pulumi.Input[_builtins.str] config: The configuration as a JSON encoded string
         :param pulumi.Input[_builtins.bool] force: If an already existing image should be deleted if it exists
         :param pulumi.Input[_builtins.str] name: The name of the image
@@ -166,6 +184,7 @@ class PackageImage(pulumi.CustomResource):
     def _internal_init(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
+                 architecture: Optional[pulumi.Input[_builtins.str]] = None,
                  config: Optional[pulumi.Input[_builtins.str]] = None,
                  force: Optional[pulumi.Input[_builtins.bool]] = None,
                  name: Optional[pulumi.Input[_builtins.str]] = None,
@@ -181,6 +200,7 @@ class PackageImage(pulumi.CustomResource):
                 raise TypeError('__props__ is only valid when passed in combination with a valid opts.id to get an existing resource')
             __props__ = PackageImageArgs.__new__(PackageImageArgs)
 
+            __props__.__dict__["architecture"] = architecture
             __props__.__dict__["config"] = config
             __props__.__dict__["force"] = force
             if name is None and not opts.urn:
@@ -217,6 +237,7 @@ class PackageImage(pulumi.CustomResource):
 
         __props__ = PackageImageArgs.__new__(PackageImageArgs)
 
+        __props__.__dict__["architecture"] = None
         __props__.__dict__["config"] = None
         __props__.__dict__["image_name"] = None
         __props__.__dict__["image_path"] = None
@@ -224,6 +245,14 @@ class PackageImage(pulumi.CustomResource):
         __props__.__dict__["provider"] = None
         __props__.__dict__["use_latest_kernel"] = None
         return PackageImage(resource_name, opts=opts, __props__=__props__)
+
+    @_builtins.property
+    @pulumi.getter
+    def architecture(self) -> pulumi.Output[_builtins.str]:
+        """
+        The target architecture of the built image
+        """
+        return pulumi.get(self, "architecture")
 
     @_builtins.property
     @pulumi.getter

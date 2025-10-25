@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 
 	"github.com/nanovms/ops/cmd"
 	"github.com/nanovms/ops/lepton"
@@ -40,6 +41,7 @@ type PackageImageArgs struct {
 	PackageName     string `pulumi:"packageName"`
 	Config          string `pulumi:"config,optional"`
 	Provider        string `pulumi:"provider"`
+	Architecture    string `pulumi:"architecture,optional"`
 	Force           bool   `pulumi:"force,optional"`
 	UseLatestKernel bool   `pulumi:"useLatestKernel,optional"`
 }
@@ -49,6 +51,7 @@ func (i *PackageImageArgs) Annotate(a infer.Annotator) {
 	a.Describe(&i.PackageName, "The name of the package to use (e.g., 'node_v18.7.0')")
 	a.Describe(&i.Config, "The configuration as a JSON encoded string")
 	a.Describe(&i.Provider, "The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)")
+	a.Describe(&i.Architecture, "The target architecture (amd64 or arm64). If not specified, uses the current system architecture")
 	a.Describe(&i.Force, "If an already existing image should be deleted if it exists")
 	a.Describe(&i.UseLatestKernel, "If the latest kernel should be used, download it if necessary")
 }
@@ -59,6 +62,7 @@ type PackageImageState struct {
 	PackageName     string `pulumi:"packageName"`
 	Config          string `pulumi:"config"`
 	Provider        string `pulumi:"provider"`
+	Architecture    string `pulumi:"architecture"`
 	UseLatestKernel bool   `pulumi:"useLatestKernel"`
 }
 
@@ -69,6 +73,7 @@ func (i *PackageImageState) Annotate(a infer.Annotator) {
 	a.Describe(&i.PackageName, "The name of the package used")
 	a.Describe(&i.Config, "The configuration of the built image as a JSON encoded string")
 	a.Describe(&i.Provider, "The cloud provider of the built image")
+	a.Describe(&i.Architecture, "The target architecture of the built image")
 	a.Describe(&i.UseLatestKernel, "If the latest kernel should be used, download it if necessary")
 }
 
@@ -89,6 +94,7 @@ func (*PackageImage) Create(ctx context.Context, req infer.CreateRequest[Package
 				PackageName:     req.Inputs.PackageName,
 				Config:          string(builder.configAsJson),
 				Provider:        req.Inputs.Provider,
+				Architecture:    builder.architecture,
 				UseLatestKernel: req.Inputs.UseLatestKernel,
 			},
 		}, nil
@@ -128,6 +134,7 @@ func (*PackageImage) Create(ctx context.Context, req infer.CreateRequest[Package
 			PackageName:     req.Inputs.PackageName,
 			Config:          string(builder.configAsJson),
 			Provider:        req.Inputs.Provider,
+			Architecture:    builder.architecture,
 			UseLatestKernel: req.Inputs.UseLatestKernel,
 		},
 	}, nil
@@ -197,6 +204,17 @@ func (*PackageImage) Check(ctx context.Context, req infer.CheckRequest) (infer.C
 			Property: "packageName",
 			Reason:   "packageName must be a non-empty string",
 		})
+	}
+
+	architecture, ok := req.NewInputs.GetOk("architecture")
+	if ok && architecture.IsString() {
+		arch := architecture.AsString()
+		if arch != "" && arch != "amd64" && arch != "arm64" {
+			fails = append(fails, p.CheckFailure{
+				Property: "architecture",
+				Reason:   "architecture must be either 'amd64' or 'arm64'",
+			})
+		}
 	}
 
 	config, ok := req.NewInputs.GetOk("config")
@@ -321,6 +339,7 @@ func (*PackageImage) WireDependencies(f infer.FieldSelector, args *PackageImageA
 	f.OutputField(&state.PackageName).DependsOn(f.InputField(&args.PackageName))
 	f.OutputField(&state.Config).DependsOn(f.InputField(&args.Config))
 	f.OutputField(&state.Provider).DependsOn(f.InputField(&args.Provider))
+	f.OutputField(&state.Architecture).DependsOn(f.InputField(&args.Architecture))
 	f.OutputField(&state.UseLatestKernel).DependsOn(f.InputField(&args.UseLatestKernel))
 }
 
@@ -329,6 +348,7 @@ type packageBuilder struct {
 	configAsJson string
 	provider     lepton.Provider
 	packagePath  string
+	architecture string
 }
 
 func createPackageBuilder(ctx context.Context, args PackageImageArgs, building bool) (*packageBuilder, error) {
@@ -340,6 +360,23 @@ func createPackageBuilder(ctx context.Context, args PackageImageArgs, building b
 		err := json.Unmarshal([]byte(args.Config), config)
 		if err != nil {
 			return nil, fmt.Errorf("cannot unmarshal config: %w", err)
+		}
+	}
+
+	// Set the architecture for package resolution
+	// This affects which package variant (amd64/arm64) gets downloaded
+	var targetArch string
+	if args.Architecture != "" {
+		targetArch = args.Architecture
+		lepton.AltGOARCH = args.Architecture
+		if building {
+			p.GetLogger(ctx).Infof("Using specified architecture: %s", args.Architecture)
+		}
+	} else {
+		targetArch = runtime.GOARCH
+		lepton.AltGOARCH = runtime.GOARCH
+		if building {
+			p.GetLogger(ctx).Infof("Using runtime architecture: %s", runtime.GOARCH)
 		}
 	}
 
@@ -413,5 +450,6 @@ func createPackageBuilder(ctx context.Context, args PackageImageArgs, building b
 		configAsJson: string(resultingConfig),
 		provider:     provider,
 		packagePath:  packagePath,
+		architecture: targetArch,
 	}, nil
 }
