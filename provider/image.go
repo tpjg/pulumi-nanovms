@@ -49,7 +49,7 @@ func (i *ImageArgs) Annotate(a infer.Annotator) {
 	a.Describe(&i.Name, "The name of the image")
 	a.Describe(&i.Elf, "The path to the executable file")
 	a.Describe(&i.Config, "The configuration as a JSON encoded string")
-	a.Describe(&i.Provider, "The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)")
+	a.Describe(&i.Provider, "The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)")
 	a.Describe(&i.Force, "If an already existing image should be deleted if it exists")
 	a.Describe(&i.UseLatestKernel, "If the latest kernel should be used, download it if necessary")
 }
@@ -174,19 +174,14 @@ func (*Image) Check(ctx context.Context, req infer.CheckRequest) (infer.CheckRes
 			Property: "provider",
 			Reason:   "provider not specified",
 		})
-	} else {
-		switch provider.AsString() {
-		case "onprem":
-			break
-		case "do":
-			break
-		default:
-			fails = append(fails, p.CheckFailure{
-				Property: "provider",
-				Reason:   fmt.Sprintf("provider %s not supported", provider.AsString()),
-			})
-		}
+	} else if !provider.IsString() || provider.AsString() == "" {
+		fails = append(fails, p.CheckFailure{
+			Property: "provider",
+			Reason:   "provider must be a non-empty string",
+		})
 	}
+	// Note: Provider validation is now done at runtime when creating the cloud provider.
+	// This allows all providers supported by ops/lepton to be used.
 
 	config, ok := req.NewInputs.GetOk("config")
 	if ok {

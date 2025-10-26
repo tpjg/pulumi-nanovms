@@ -1,0 +1,14 @@
+name: use-nanovms-provider
+description: A minimal TypeScript Pulumi program
+runtime:
+  name: nodejs
+  options:
+    packagemanager: bun
+plugins:
+  providers:
+    - name: pulumi-nanovms
+      path: ../../provider
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: typescript

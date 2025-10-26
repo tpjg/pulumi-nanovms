@@ -134,7 +134,7 @@ namespace Tpjg.PulumiNanovms
         public Input<string> PackageName { get; set; } = null!;
 
         /// <summary>
-        /// The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)
+        /// The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)
         /// </summary>
         [Input("provider", required: true)]
         public Input<string> Provider { get; set; } = null!;

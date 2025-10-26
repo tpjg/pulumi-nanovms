@@ -1,7 +1,7 @@
 {
   "name": "pulumi-nanovms",
   "displayName": "pulumi-nanovms",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A provider for NanoVMs with pulumi-go-provider.",
   "homepage": "https://www.pulumi.com",
   "namespace": "tpjg",
@@ -83,7 +83,7 @@
         },
         "provider": {
           "type": "string",
-          "description": "The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)"
+          "description": "The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)"
         },
         "useLatestKernel": {
           "type": "boolean",
@@ -233,7 +233,7 @@
         },
         "provider": {
           "type": "string",
-          "description": "The target cloud provider (onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do)"
+          "description": "The target cloud provider (e.g., onprem, gcp, aws, azure, oracle, openstack, vsphere, upcloud, do, linode, vultr)"
         },
         "useLatestKernel": {
           "type": "boolean",
