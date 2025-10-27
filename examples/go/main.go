@@ -11,15 +11,14 @@ import (
 func main() {
 
 	cfg := types.Config{
-		Env: map[string]string{"BAR": "3600"},
-		RunConfig: types.RunConfig{
-			ShowDebug: true,
-			//Bridged: false,
-			//Memory:  "2G",
-		},
+		Env:       map[string]string{"BAR": "3600"},
+		Klibs:     []string{"tls", "userdata_env"},
+		RunConfig: types.RunConfig{},
 		CloudConfig: types.ProviderConfig{
-			BucketName: "ops-1992",
-			Zone:       "ams3",
+			Zone: "eu-central-1",
+			UserData: `ENV_FROM_USER_DATA=test1
+ENV_NUMBER2=test2
+`,
 		},
 	}
 	config, err := json.Marshal(cfg)
@@ -30,7 +29,7 @@ func main() {
 		img, err := ops.NewImage(ctx, "test", &ops.ImageArgs{
 			Name:            pulumi.String("test-image"),
 			Elf:             pulumi.String("example"),
-			Provider:        pulumi.String("do"),
+			Provider:        pulumi.String("aws"),
 			Config:          pulumi.String(config),
 			Force:           pulumi.Bool(true),
 			UseLatestKernel: pulumi.Bool(false),

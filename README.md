@@ -321,7 +321,7 @@ Publishing to package registries requires secrets to be configured:
 The provider uses a custom fork of the NanoVMs ops library:
 
 ```go
-replace github.com/nanovms/ops => github.com/tpjg/ops v0.1.43-tg2
+replace github.com/nanovms/ops => github.com/tpjg/ops v0.1.43-tg3
 ```
 
 This fork includes modifications needed for the Pulumi provider integration, such as:
