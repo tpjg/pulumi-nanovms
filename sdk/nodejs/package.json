@@ -1,6 +1,6 @@
 {
     "name": "@tpjg/pulumi-nanovms",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "homepage": "https://www.pulumi.com",
     "scripts": {
         "build": "tsc"
@@ -15,6 +15,6 @@
     "pulumi": {
         "resource": true,
         "name": "pulumi-nanovms",
-        "version": "0.1.0"
+        "version": "0.1.2"
     }
 }
