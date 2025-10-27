@@ -8,7 +8,7 @@ echo "Building provider version $VERSION..."
 
 # Build the provider binary with version injection
 echo "Building provider binary..."
-go build -ldflags "-X main.Version=$VERSION" -o pulumi-nanovms
+go build -ldflags "-X main.Version=$VERSION -s -w" -o pulumi-nanovms
 
 # Generate schema from the built provider
 echo "Generating schema..."
@@ -22,7 +22,7 @@ fi
 
 # Generate SDKs for all languages
 echo "Generating SDKs..."
-pulumi package gen-sdk . --out ../sdk
+pulumi package gen-sdk . --version $VERSION --out ../sdk
 
 # Initialize Go SDK module
 echo "Initializing Go SDK module..."
@@ -35,5 +35,7 @@ go mod tidy
 # Install nodejs dependencies
 cd ../../nodejs
 bun install
+tsc
+bun link
 
 echo "SDK generation complete!"
