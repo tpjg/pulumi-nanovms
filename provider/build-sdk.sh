@@ -35,5 +35,7 @@ go mod tidy
 # Install nodejs dependencies
 cd ../../nodejs
 bun install
+tsc
+bun link
 
 echo "SDK generation complete!"
