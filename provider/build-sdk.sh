@@ -22,7 +22,7 @@ fi
 
 # Generate SDKs for all languages
 echo "Generating SDKs..."
-pulumi package gen-sdk . --local --out ../sdk
+pulumi package gen-sdk . --out ../sdk
 
 # Initialize Go SDK module
 echo "Initializing Go SDK module..."
