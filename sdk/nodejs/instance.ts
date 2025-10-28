@@ -21,7 +21,7 @@ export class Instance extends pulumi.CustomResource {
     }
 
     /** @internal */
-    public static readonly __pulumiType = 'pulumi-nanovms:index:Instance';
+    public static readonly __pulumiType = 'nanovms:index:Instance';
 
     /**
      * Returns true if the given object is an instance of Instance.  This is designed to work even

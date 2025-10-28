@@ -21,11 +21,11 @@ func (m *module) Version() semver.Version {
 
 func (m *module) Construct(ctx *pulumi.Context, name, typ, urn string) (r pulumi.Resource, err error) {
 	switch typ {
-	case "pulumi-nanovms:index:Image":
+	case "nanovms:index:Image":
 		r = &Image{}
-	case "pulumi-nanovms:index:Instance":
+	case "nanovms:index:Instance":
 		r = &Instance{}
-	case "pulumi-nanovms:index:PackageImage":
+	case "nanovms:index:PackageImage":
 		r = &PackageImage{}
 	default:
 		return nil, fmt.Errorf("unknown resource type: %s", typ)
@@ -44,7 +44,7 @@ func (p *pkg) Version() semver.Version {
 }
 
 func (p *pkg) ConstructProvider(ctx *pulumi.Context, name, typ, urn string) (pulumi.ProviderResource, error) {
-	if typ != "pulumi:providers:pulumi-nanovms" {
+	if typ != "pulumi:providers:nanovms" {
 		return nil, fmt.Errorf("unknown provider type: %s", typ)
 	}
 
@@ -59,12 +59,12 @@ func init() {
 		version = semver.Version{Major: 1}
 	}
 	pulumi.RegisterResourceModule(
-		"pulumi-nanovms",
+		"nanovms",
 		"index",
 		&module{version},
 	)
 	pulumi.RegisterResourcePackage(
-		"pulumi-nanovms",
+		"nanovms",
 		&pkg{version},
 	)
 }

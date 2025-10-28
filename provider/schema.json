@@ -1,7 +1,7 @@
 {
-  "name": "pulumi-nanovms",
+  "name": "nanovms",
   "displayName": "pulumi-nanovms",
-  "version": "0.1.3",
+  "version": "0.1.5-rc0",
   "description": "A provider for NanoVMs with pulumi-go-provider.",
   "homepage": "https://www.pulumi.com",
   "namespace": "tpjg",
@@ -32,7 +32,7 @@
     "type": "object"
   },
   "resources": {
-    "pulumi-nanovms:index:Image": {
+    "nanovms:index:Image": {
       "description": "A NanoVMs image resource for building unikernel images",
       "properties": {
         "config": {
@@ -96,7 +96,7 @@
         "provider"
       ]
     },
-    "pulumi-nanovms:index:Instance": {
+    "nanovms:index:Instance": {
       "description": "A NanoVMs resource for deploying unikernel images",
       "properties": {
         "config": {
@@ -168,7 +168,7 @@
         "provider"
       ]
     },
-    "pulumi-nanovms:index:PackageImage": {
+    "nanovms:index:PackageImage": {
       "description": "A NanoVMs package image resource for building unikernel images from packages",
       "properties": {
         "architecture": {

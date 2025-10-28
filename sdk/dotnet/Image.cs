@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 using Pulumi.Serialization;
 using Pulumi;
 
-namespace Tpjg.PulumiNanovms
+namespace Tpjg.Nanovms
 {
     /// <summary>
     /// A NanoVMs image resource for building unikernel images
     /// </summary>
-    [PulumiNanovmsResourceType("pulumi-nanovms:index:Image")]
+    [NanovmsResourceType("nanovms:index:Image")]
     public partial class Image : global::Pulumi.CustomResource
     {
         /// <summary>
@@ -55,12 +55,12 @@ namespace Tpjg.PulumiNanovms
         /// <param name="args">The arguments used to populate this resource's properties</param>
         /// <param name="options">A bag of options that control this resource's behavior</param>
         public Image(string name, ImageArgs args, CustomResourceOptions? options = null)
-            : base("pulumi-nanovms:index:Image", name, args ?? new ImageArgs(), MakeResourceOptions(options, ""))
+            : base("nanovms:index:Image", name, args ?? new ImageArgs(), MakeResourceOptions(options, ""))
         {
         }
 
         private Image(string name, Input<string> id, CustomResourceOptions? options = null)
-            : base("pulumi-nanovms:index:Image", name, null, MakeResourceOptions(options, id))
+            : base("nanovms:index:Image", name, null, MakeResourceOptions(options, id))
         {
         }
 

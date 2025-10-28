@@ -24,7 +24,7 @@ func NewProvider(ctx *pulumi.Context,
 
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Provider
-	err := ctx.RegisterResource("pulumi:providers:pulumi-nanovms", name, args, &resource, opts...)
+	err := ctx.RegisterResource("pulumi:providers:nanovms", name, args, &resource, opts...)
 	if err != nil {
 		return nil, err
 	}
