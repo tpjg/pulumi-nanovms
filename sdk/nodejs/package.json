@@ -1,20 +1,27 @@
 {
-    "name": "@tpjg/nanovms",
-    "version": "0.1.5-rc0",
-    "homepage": "https://www.pulumi.com",
-    "scripts": {
-        "build": "tsc"
-    },
-    "dependencies": {
-        "@pulumi/pulumi": "^3.142.0"
-    },
-    "devDependencies": {
-        "@types/node": "^18",
-        "typescript": "^4.3.5"
-    },
-    "pulumi": {
-        "resource": true,
-        "name": "nanovms",
-        "version": "0.1.5-rc0"
-    }
+  "name": "@tpjg/nanovms",
+  "version": "0.1.5-rc0",
+  "homepage": "https://www.pulumi.com",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@pulumi/pulumi": "^3.142.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18",
+    "typescript": "^4.3.5"
+  },
+  "pulumi": {
+    "resource": true,
+    "name": "nanovms",
+    "version": "0.1.5-rc0"
+  },
+  "main": "bin/index.js",
+  "types": "bin/index.d.ts",
+  "files": [
+    "bin/",
+    "README.md",
+    "package.json"
+  ]
 }

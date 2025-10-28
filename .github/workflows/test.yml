@@ -29,11 +29,11 @@ jobs:
         run: |
           VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.1.0-dev")
           echo "Building version: $VERSION"
-          go build -ldflags "-X main.Version=$VERSION" -o pulumi-nanovms
+          go build -ldflags "-X main.Version=$VERSION" -o pulumi-resource-nanovms
 
       - name: Generate schema
         working-directory: provider
-        run: pulumi package get-schema ./pulumi-nanovms > schema.json
+        run: pulumi package get-schema ./pulumi-resource-nanovms > schema.json
 
       - name: Verify schema
         working-directory: provider

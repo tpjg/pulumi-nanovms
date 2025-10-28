@@ -10,7 +10,7 @@ require (
 	github.com/wI2L/jsondiff v0.7.0
 )
 
-replace github.com/nanovms/ops => github.com/tpjg/ops v0.1.43-tg3
+replace github.com/nanovms/ops => github.com/tpjg/ops v0.1.43-tg4
 
 require (
 	cel.dev/expr v0.24.0 // indirect

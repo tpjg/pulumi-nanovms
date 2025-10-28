@@ -8,7 +8,7 @@ require (
 	github.com/tpjg/pulumi-nanovms/sdk/go/pulumi-nanovms v0.1.0
 )
 
-replace github.com/nanovms/ops => github.com/tpjg/ops v0.1.43-tg3
+replace github.com/nanovms/ops => github.com/tpjg/ops v0.1.43-tg4
 
 replace github.com/tpjg/pulumi-nanovms/sdk/go/pulumi-nanovms => ../../sdk/go/pulumi-nanovms
 

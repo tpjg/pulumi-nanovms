@@ -14,7 +14,7 @@ The Pulumi NanoVMs provider enables you to build and deploy applications as ligh
 
 ```typescript
 import * as pulumi from "@pulumi/pulumi";
-import * as nanovms from "@tpjg/pulumi-nanovms";
+import * as nanovms from "@tpjg/nanovms";
 
 // Create configuration for the unikernel
 const config = {
