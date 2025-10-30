@@ -12,6 +12,6 @@
   },
   "dependencies": {
     "@pulumi/pulumi": "^3.142.0",
-    "@tpjg/pulumi-nanovms": "file:../../sdk/nodejs"
+    "@tpjg/nanovms": "file:../../sdk/nodejs"
   }
 }

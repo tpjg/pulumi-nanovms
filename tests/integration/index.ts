@@ -1,5 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
-import * as nanovms from "@tpjg/pulumi-nanovms";
+import * as nanovms from "@tpjg/nanovms";
 
 // Get the example application binary path from environment or use default
 const exampleBinary =

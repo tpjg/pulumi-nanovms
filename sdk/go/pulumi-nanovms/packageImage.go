@@ -50,7 +50,7 @@ func NewPackageImage(ctx *pulumi.Context,
 	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource PackageImage
-	err := ctx.RegisterResource("pulumi-nanovms:index:PackageImage", name, args, &resource, opts...)
+	err := ctx.RegisterResource("nanovms:index:PackageImage", name, args, &resource, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func NewPackageImage(ctx *pulumi.Context,
 func GetPackageImage(ctx *pulumi.Context,
 	name string, id pulumi.IDInput, state *PackageImageState, opts ...pulumi.ResourceOption) (*PackageImage, error) {
 	var resource PackageImage
-	err := ctx.ReadResource("pulumi-nanovms:index:PackageImage", name, id, state, &resource, opts...)
+	err := ctx.ReadResource("nanovms:index:PackageImage", name, id, state, &resource, opts...)
 	if err != nil {
 		return nil, err
 	}

@@ -6,5 +6,5 @@ runtime:
     packagemanager: bun
 plugins:
   providers:
-    - name: pulumi-nanovms
+    - name: nanovms
       path: ../../provider

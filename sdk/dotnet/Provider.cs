@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using Pulumi.Serialization;
 using Pulumi;
 
-namespace Tpjg.PulumiNanovms
+namespace Tpjg.Nanovms
 {
-    [PulumiNanovmsResourceType("pulumi:providers:pulumi-nanovms")]
+    [NanovmsResourceType("pulumi:providers:nanovms")]
     public partial class Provider : global::Pulumi.ProviderResource
     {
         /// <summary>
@@ -21,7 +21,7 @@ namespace Tpjg.PulumiNanovms
         /// <param name="args">The arguments used to populate this resource's properties</param>
         /// <param name="options">A bag of options that control this resource's behavior</param>
         public Provider(string name, ProviderArgs? args = null, CustomResourceOptions? options = null)
-            : base("pulumi-nanovms", name, args ?? new ProviderArgs(), MakeResourceOptions(options, ""))
+            : base("nanovms", name, args ?? new ProviderArgs(), MakeResourceOptions(options, ""))
         {
         }
 

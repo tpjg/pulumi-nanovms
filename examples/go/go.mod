@@ -3,12 +3,12 @@ module github.com/tpjg/pulumi-nanovms/examples/go
 go 1.25.3
 
 require (
-	github.com/nanovms/ops v0.0.0-20250629195313-b0ff68772e84
-	github.com/pulumi/pulumi/sdk/v3 v3.204.0
-	github.com/tpjg/pulumi-nanovms/sdk/go/pulumi-nanovms v0.1.0
+	github.com/nanovms/ops v0.0.0-20251029025438-f38c7a88bc27
+	github.com/pulumi/pulumi/sdk/v3 v3.205.0
+	github.com/tpjg/pulumi-nanovms/sdk/go/pulumi-nanovms v0.1.5-rc0
 )
 
-replace github.com/nanovms/ops => github.com/tpjg/ops v0.1.43-tg3
+replace github.com/nanovms/ops => github.com/tpjg/ops v0.0.0-20251030104818-84f322d6a8a2
 
 replace github.com/tpjg/pulumi-nanovms/sdk/go/pulumi-nanovms => ../../sdk/go/pulumi-nanovms
 
@@ -96,5 +96,3 @@ require (
 	lukechampine.com/frand v1.4.2 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
-
-replace github.com/pulumi/pulumi-nanovms => ../nanovms-provider

@@ -22,7 +22,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = provider.Run(context.Background(), "pulumi-nanovms", Version)
+	err = provider.Run(context.Background(), "nanovms", Version)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s", err.Error())

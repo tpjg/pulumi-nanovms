@@ -35,7 +35,7 @@ The script automatically detects your platform (macOS/Linux, amd64/arm64) and in
 
 ```bash
 # Node.js/TypeScript
-bun install @tpjg/pulumi-nanovms
+bun install @tpjg/nanovms
 
 # Python
 pip install tpjg-pulumi-nanovms
@@ -112,31 +112,9 @@ pulumi-nanovms/
    - Python 3.11+
    - .NET 6.0+ (optional)
 
-### Building the Provider
+### Building the Provider and generating the SDKs
 
-#### Quick Build
-
-```bash
-cd provider
-go build -o pulumi-nanovms
-```
-
-#### Build with Version Injection
-
-```bash
-cd provider
-VERSION=0.2.0 go build -ldflags "-X main.Version=0.2.0" -o pulumi-nanovms
-```
-
-The version can also be automatically extracted from git tags:
-
-```bash
-cd provider
-./build-sdk.sh  # Uses git tags or defaults to 0.1.0
-```
-
-### Generating SDKs
-
+The version will be automatically extracted from git tags:
 The provider generates SDKs for 4 languages using Pulumi's code generation:
 
 ```bash
@@ -340,12 +318,11 @@ Publishing to package registries requires secrets to be configured:
 The provider uses a custom fork of the NanoVMs ops library:
 
 ```go
-replace github.com/nanovms/ops => github.com/tpjg/ops v0.1.43-tg3
+replace github.com/nanovms/ops => github.com/tpjg/ops
 ```
 
-This fork includes modifications needed for the Pulumi provider integration, such as:
-- creating a session when using qemu (so the instance is not killed when the pulumi process is killed)
-- a bugfix in the digital ocean provider when creating the image URL to allow images in private spaces
+This fork includes modifications needed for the Pulumi provider integration to properly detach
+background processes. A PR to the upstream ops library is submitted to merge these changes.
 
 ### Code Style
 

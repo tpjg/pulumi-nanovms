@@ -3,7 +3,7 @@ description: A minimal Go Pulumi program
 runtime: go
 plugins:
   providers:
-    - name: pulumi-nanovms
+    - name: nanovms
       path: ../../provider
 config:
   pulumi:tags:

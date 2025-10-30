@@ -44,7 +44,7 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 0
         run: |
-          BINARY_NAME=pulumi-nanovms
+          BINARY_NAME=pulumi-resource-nanovms
           if [ "${{ matrix.goos }}" = "windows" ]; then
             BINARY_NAME="${BINARY_NAME}.exe"
           fi
@@ -105,8 +105,8 @@ jobs:
       - name: Build provider and generate schema
         working-directory: provider
         run: |
-          go build -o pulumi-nanovms
-          pulumi package get-schema ./pulumi-nanovms > schema.json
+          go build -o pulumi-resource-nanovms
+          pulumi package get-schema ./pulumi-resource-nanovms > schema.json
 
       - name: Set up bun instead of Node.js
         uses: oven-sh/setup-bun@v2

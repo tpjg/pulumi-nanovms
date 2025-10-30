@@ -11,19 +11,13 @@ The Pulumi NanoVMs provider is available for multiple languages. Follow the inst
 ### TypeScript/JavaScript (Node.js)
 
 ```bash
-npm install @tpjg/pulumi-nanovms
-```
-
-Or with Yarn:
-
-```bash
-yarn add @tpjg/pulumi-nanovms
+npm install @tpjg/nanovms
 ```
 
 Or with Bun:
 
 ```bash
-bun add @tpjg/pulumi-nanovms
+bun add @tpjg/nanovms
 ```
 
 ### Python

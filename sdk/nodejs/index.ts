@@ -30,22 +30,22 @@ const _module = {
     version: utilities.getVersion(),
     construct: (name: string, type: string, urn: string): pulumi.Resource => {
         switch (type) {
-            case "pulumi-nanovms:index:Image":
+            case "nanovms:index:Image":
                 return new Image(name, <any>undefined, { urn })
-            case "pulumi-nanovms:index:Instance":
+            case "nanovms:index:Instance":
                 return new Instance(name, <any>undefined, { urn })
-            case "pulumi-nanovms:index:PackageImage":
+            case "nanovms:index:PackageImage":
                 return new PackageImage(name, <any>undefined, { urn })
             default:
                 throw new Error(`unknown resource type ${type}`);
         }
     },
 };
-pulumi.runtime.registerResourceModule("pulumi-nanovms", "index", _module)
-pulumi.runtime.registerResourcePackage("pulumi-nanovms", {
+pulumi.runtime.registerResourceModule("nanovms", "index", _module)
+pulumi.runtime.registerResourcePackage("nanovms", {
     version: utilities.getVersion(),
     constructProvider: (name: string, type: string, urn: string): pulumi.ProviderResource => {
-        if (type !== "pulumi:providers:pulumi-nanovms") {
+        if (type !== "pulumi:providers:nanovms") {
             throw new Error(`unknown provider type ${type}`);
         }
         return new Provider(name, <any>undefined, { urn });

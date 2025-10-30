@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -67,11 +68,16 @@ func (*Instance) Create(ctx context.Context, req infer.CreateRequest[InstanceArg
 	var resp infer.CreateResponse[InstanceState]
 
 	var config types.Config
-	if err := json.Unmarshal([]byte(req.Inputs.Config), &config); err != nil {
-		if req.Inputs.Config == "" {
-			p.GetLogger(ctx).Info("no config provided, using default")
-		} else {
-			return resp, fmt.Errorf("failed to unmarshal config: %w", err)
+
+	// In preview mode the Config may be empty, e.g. if it uses the result of an
+	// image Create, in preview mode Pulumi does not wait for dependencies.
+	if !req.DryRun {
+		if err := json.Unmarshal([]byte(req.Inputs.Config), &config); err != nil {
+			if req.Inputs.Config == "" {
+				p.GetLogger(ctx).Warning("no config provided, using default")
+			} else {
+				return resp, fmt.Errorf("failed to unmarshal config: %w", err)
+			}
 		}
 	}
 	if req.Inputs.ImageName != "" {
@@ -82,6 +88,24 @@ func (*Instance) Create(ctx context.Context, req infer.CreateRequest[InstanceArg
 			strings.Split(filepath.Base(config.CloudConfig.ImageName), ".")[0],
 			strconv.FormatInt(time.Now().Unix(), 10),
 		)
+	}
+	// Pulumi makes the plugin binary (=this code) a process group and later
+	// uses signals to kill it, prevent the instance from being killed.
+	config.RunConfig.BackgroundDetach = true
+
+	resp.ID = config.RunConfig.InstanceName
+	resp.Output = InstanceState{
+		InstanceID: config.RunConfig.InstanceName,
+		ImageName:  config.CloudConfig.ImageName,
+		Config:     req.Inputs.Config,
+		Provider:   req.Inputs.Provider,
+	}
+
+	// If previewing and not running on-prem, return early, only for onprem a
+	// check is usefull and other providers may need Config to be filled to
+	// be able to initialize.
+	if req.DryRun && req.Inputs.Provider != "onprem" {
+		return resp, nil
 	}
 
 	provider, err := provider.CloudProvider(req.Inputs.Provider, &config.CloudConfig)
@@ -110,27 +134,33 @@ func (*Instance) Create(ctx context.Context, req infer.CreateRequest[InstanceArg
 		}
 	}
 	if !req.DryRun {
-		p.GetLogger(ctx).Infof("creating instance on %s for %s", req.Inputs.Provider, config.CloudConfig.ImageName)
+		if strings.Contains(config.Kernel, "arm") && strings.Contains(runtime.GOARCH, "amd") {
+			// running on amd64 but starting an arm64 instance, set AltGOARCH
+			lepton.AltGOARCH = "arm64"
+			p.GetLogger(ctx).Infof("creating instance on %s for %s with architecture: %v", req.Inputs.Provider, config.CloudConfig.ImageName, lepton.AltGOARCH)
+		} else if !strings.Contains(config.Kernel, "arm") && strings.Contains(runtime.GOARCH, "arm") {
+			// running on arm64 but starting an amd64 instance, set AltGOARCH
+			lepton.AltGOARCH = "amd64"
+			p.GetLogger(ctx).Infof("creating instance on %s for %s with architecture: %v", req.Inputs.Provider, config.CloudConfig.ImageName, lepton.AltGOARCH)
+		} else {
+			p.GetLogger(ctx).Infof("creating instance on %s for %s", req.Inputs.Provider, config.CloudConfig.ImageName)
+		}
 		err = provider.CreateInstance(opsContext)
 		if err != nil {
 			return resp, fmt.Errorf("failed to create instance: %w", err)
 		}
-	} else {
-		p.GetLogger(ctx).Infof("previewing instance creation on %s for %s", req.Inputs.Provider, config.CloudConfig.ImageName)
+		if req.Inputs.Provider == "onprem" {
+			time.Sleep(200 * time.Millisecond)
+			p.GetLogger(ctx).Infof("created the instance, returning response!")
+			time.Sleep(500 * time.Millisecond)
+		}
 	}
-	resp.ID = config.RunConfig.InstanceName
-	resp.Output = InstanceState{
-		InstanceID: resp.ID,
-		ImageName:  config.CloudConfig.ImageName,
-		Config:     req.Inputs.Config,
-		Provider:   req.Inputs.Provider,
-	}
+
 	if !req.DryRun {
 		resp.Output.Status = "starting"
 		resp.Output.PublicIPs = []string{}
 		resp.Output.PrivateIPs = []string{}
 	}
-
 	return resp, nil
 }
 

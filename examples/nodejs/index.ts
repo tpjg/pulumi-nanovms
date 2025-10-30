@@ -1,5 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
-import * as nanovms from "@tpjg/pulumi-nanovms";
+import * as nanovms from "@tpjg/nanovms";
 
 // Create configuration object matching the Go example
 const config = {
@@ -24,7 +24,7 @@ const img = new nanovms.Image(
   {
     name: "test-image",
     elf: "example",
-    provider: "do",
+    provider: "onprem",
     config: configJson,
     force: true,
     useLatestKernel: false,

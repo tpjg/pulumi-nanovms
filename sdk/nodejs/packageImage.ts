@@ -21,7 +21,7 @@ export class PackageImage extends pulumi.CustomResource {
     }
 
     /** @internal */
-    public static readonly __pulumiType = 'pulumi-nanovms:index:PackageImage';
+    public static readonly __pulumiType = 'nanovms:index:PackageImage';
 
     /**
      * Returns true if the given object is an instance of PackageImage.  This is designed to work even
