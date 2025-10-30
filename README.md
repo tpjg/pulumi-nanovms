@@ -318,12 +318,11 @@ Publishing to package registries requires secrets to be configured:
 The provider uses a custom fork of the NanoVMs ops library:
 
 ```go
-replace github.com/nanovms/ops => github.com/tpjg/ops v0.1.43-tg4
+replace github.com/nanovms/ops => github.com/tpjg/ops
 ```
 
-This fork includes modifications needed for the Pulumi provider integration, such as:
-- creating a session when using qemu (so the instance is not killed when the pulumi process is killed)
-- a bugfix in the digital ocean provider when creating the image URL to allow images in private spaces
+This fork includes modifications needed for the Pulumi provider integration to properly detach
+background processes. A PR to the upstream ops library is submitted to merge these changes.
 
 ### Code Style
 

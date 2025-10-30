@@ -1,16 +1,16 @@
 module github.com/tpjg/pulumi-nanovms
 
-go 1.25.0
+go 1.25.3
 
 require (
-	github.com/nanovms/ops v0.0.0-20250629195313-b0ff68772e84
+	github.com/nanovms/ops v0.0.0-20251029025438-f38c7a88bc27
 	github.com/pulumi/pulumi-go-provider v1.1.2
 	github.com/pulumi/pulumi/sdk/v3 v3.203.0
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
 	github.com/wI2L/jsondiff v0.7.0
 )
 
-replace github.com/nanovms/ops => github.com/tpjg/ops v0.1.43-tg4
+replace github.com/nanovms/ops => github.com/tpjg/ops v0.0.0-20251030104818-84f322d6a8a2
 
 require (
 	cel.dev/expr v0.24.0 // indirect

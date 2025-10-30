@@ -149,8 +149,8 @@ info "Running build-sdk.sh..."
 success "Provider and SDKs built successfully"
 
 # Verify provider binary exists
-if [ ! -f "$SCRIPT_DIR/provider/pulumi-nanovms" ]; then
-    error "Provider binary not found at provider/pulumi-nanovms"
+if [ ! -f "$SCRIPT_DIR/provider/pulumi-resource-nanovms" ]; then
+    error "Provider binary not found at provider/pulumi-resource-nanovms"
     exit 1
 fi
 
