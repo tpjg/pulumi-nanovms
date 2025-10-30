@@ -7,12 +7,12 @@
 # Usage:
 #   ./install_plugin.sh [VERSION]
 #
-# If VERSION is not specified, the latest version (0.1.2) is used.
+# If VERSION is not specified, the latest version (0.1.5) is used.
 
 set -e
 
 # Default to latest version
-VERSION="${1:-0.1.2}"
+VERSION="${1:-0.1.5}"
 
 # Color output
 RED='\033[0;31m'

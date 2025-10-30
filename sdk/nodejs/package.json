@@ -1,6 +1,6 @@
 {
   "name": "@tpjg/nanovms",
-  "version": "0.1.5-rc1",
+  "version": "0.1.5",
   "homepage": "https://www.pulumi.com",
   "scripts": {
     "build": "tsc"
@@ -15,7 +15,7 @@
   "pulumi": {
     "resource": true,
     "name": "nanovms",
-    "version": "0.1.5-rc1"
+    "version": "0.1.5"
   },
   "main": "bin/index.js",
   "types": "bin/index.d.ts",

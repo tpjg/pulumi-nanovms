@@ -23,10 +23,11 @@ A Pulumi provider for building and deploying unikernel images using [NanoVMs](ht
 # Quick install - downloads and installs the plugin for your platform
 # Download install_plugin.sh
 curl -sL https://raw.githubusercontent.com/tpjg/pulumi-nanovms/main/install_plugin.sh -o install_plugin.sh
+chmod +x install_plugin.sh
 ./install_plugin.sh
 
 # Or manually specify a version
-./install_plugin.sh 0.1.2
+./install_plugin.sh 0.1.5-rc1
 ```
 
 The script automatically detects your platform (macOS/Linux, amd64/arm64) and installs the plugin to `~/.pulumi/plugins/`.
