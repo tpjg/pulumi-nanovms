@@ -12,10 +12,11 @@ func main() {
 
 	cfg := types.Config{
 		Env:       map[string]string{"BAR": "3600"},
-		Klibs:     []string{"tls", "userdata_env"},
+		Klibs:     []string{"tls", "userdata"},
 		RunConfig: types.RunConfig{},
 		CloudConfig: types.ProviderConfig{
-			Zone: "eu-central-1",
+			BucketName: "ops-1992",
+			Zone:       "ams3",
 			UserData: `ENV_FROM_USER_DATA=test1
 ENV_NUMBER2=test2
 `,
@@ -29,7 +30,7 @@ ENV_NUMBER2=test2
 		img, err := ops.NewImage(ctx, "test", &ops.ImageArgs{
 			Name:            pulumi.String("test-image"),
 			Elf:             pulumi.String("example"),
-			Provider:        pulumi.String("aws"),
+			Provider:        pulumi.String("do"),
 			Config:          pulumi.String(config),
 			Force:           pulumi.Bool(true),
 			UseLatestKernel: pulumi.Bool(false),
